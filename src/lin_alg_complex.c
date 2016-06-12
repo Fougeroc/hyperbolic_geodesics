@@ -32,7 +32,7 @@ void print_vectors(double complex * v_all)
 	}
 }
 
-void set_random_vectors(double complex *v_all)
+void set_random_vectors(double complex * v_all)
 /* set random orthogonal frame */
 /* warning: before calling this function call init_GS(dim) */
 {
@@ -208,7 +208,7 @@ void check_orthogonality(double complex *v_all)
 	      }
 	      
 	      if (i1!=i2 && creal(s) > 0.01) {
-		fprintf(stderr, "Wrong orthogonalisation\nScalar product <v[i%i], v[i%i]> : %lf\nnb_vector : %i nb_coordinates : %i\n\n",
+		fprintf(stderr, "Wrong orthogonalisation\nScalar product <v[i%zu], v[i%zu]> : %lf\nnb_vector : %i nb_coordinates : %i\n\n",
 			i1, i2, creal(s), nb_vectors, nb_coordinates);
 		print_vectors(v_all);
 		exit(EXIT_FAILURE);
@@ -311,7 +311,7 @@ void ortho_plus_check(double complex *v_all, double complex *v_buffer, double* t
 	      }
 	      
 	      if (i1!=i2 && creal(s) > 0.01) {
-		fprintf(stderr, "Wrong orthogonalisation\nScalar product <v[i%i], v[i%i]> : %lf\nnb_vector : %i nb_coordinates : %i\n\n",
+		fprintf(stderr, "Wrong orthogonalisation\nScalar product <v[i%zu], v[i%zu]> : %lf\nnb_vector : %i nb_coordinates : %i\n\n",
 			i1, i2, creal(s), nb_vectors, nb_coordinates);
 		print_vectors(v_buffer);
 		print_vectors(v_all);
