@@ -6,11 +6,12 @@ from libc.stdlib cimport malloc,free
 
 cdef extern from "hyperbolic_geodesics.h":
     void lyap_exp(size_t nb_iteration, size_t nb_vectors, size_t nb_coordinates, double complex *e_alpha, double complex *w, double *theta)
+    void lyap_exp_CY(size_t nb_iteration, size_t nb_vectors, double complex C, double complex d, double *theta)
     int init_simulation(size_t nb_v, size_t nb_c)
     void free_simulation()
 
 
-def lyapunov_exponents(e_alpha_py, w_py, nb_coordinates, nb_vectors,  nb_experiments, nb_iterations):
+def lyapunov_exponents(e_alpha_py, w_py, nb_coordinates, nb_vectors,  nb_experiments, nb_iterations, CY=[]):
     r"""
     Compute the Lyapunov exponents of the geodesic flow in the hypergeometric function
     space.
@@ -49,7 +50,11 @@ def lyapunov_exponents(e_alpha_py, w_py, nb_coordinates, nb_vectors,  nb_experim
 
     init_simulation(nb_vectors, nb_coordinates); 
     for i in xrange(nb_experiments):
-        lyap_exp(nb_iterations, nb_vectors, nb_coordinates, e_alpha, w, theta)
+        if CY:
+            [C, d] = CY
+            lyap_exp_CY(nb_iterations, nb_vectors, C, d, theta)
+        else:
+            lyap_exp(nb_iterations, nb_vectors, nb_coordinates, e_alpha, w, theta)
         for j in xrange(nb_vectors):
             res[j].append(theta[j])
 

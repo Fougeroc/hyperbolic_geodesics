@@ -4,7 +4,7 @@ from matplotlib import *
 def lin_space(a, b, s):
     delta = (b-a)/(s-1.)
     return [a + delta*k for k in range(s)]
-x
+
 class Experiment(object):
     r"""
     Class of hypergeometric flat bundle on the sphere minus three points.
@@ -643,3 +643,83 @@ class TorSecZone(TorusPlanarSection):
             anim.save('video/' + f_name[4:] + '_' + self._zone_name + '_anim.mp4', fps=30, extra_args=['-vcodec', 'libx264'])
 
         return res
+
+
+def lyap_exp_CY(C, d, nb_vectors=None, nb_experiments=10, nb_iterations=10**4, verbose=False, output_file=None, return_error=False):
+        r"""
+        Compute the Lyapunov exponents of the geodesic flow in the hypergeometric function
+        space.
+        
+        INPUT:
+
+        - ``nb_vectors`` -- the number of vectors to use
+        
+        - ``nb_experiments`` -- number of experimets
+        
+        - ``nb_iterations`` -- the number of iterations of the induction to perform
+        
+        - ``output_file`` -- place where we print the results
+        
+        - ``verbose`` -- do we print the result with an extensive number of information or not
+    
+        """
+        import time
+        import lyapunov_exponents    # the cython bindings
+        from math import sqrt
+        
+        if output_file is None:
+            from sys import stdout
+            output_file = stdout
+            closed = True
+        elif isinstance(output_file, str):
+            output_file = open(output_file, "w")
+            closed = False
+
+        if nb_vectors <> None and nb_vectors <= 0:
+            raise ValueError("the number of vectors must be positive")
+        if nb_experiments <= 0:
+            raise ValueError("the number of experiments must be positive")
+        if nb_iterations <= 0:
+            raise ValueError("the number of iterations must be positive")
+
+        #recall that the lyapunov exponents are symmetric
+        if nb_vectors > 4 or nb_vectors == None:
+            nb_vectors = 4
+
+        t0 = time.time()
+        res = lyapunov_exponents.lyapunov_exponents([0]*4, [0]*4, 4, nb_vectors, nb_experiments, nb_iterations, [C, d])
+        t1 = time.time()
+
+        res_final = []
+        std_final = []
+        s_m, s_d = 0, 0
+
+        if verbose:
+            from math import floor, log
+            output_file.write("sample of %d experiments\n"%nb_experiments)
+            output_file.write("%d iterations (~2**%d)\n"%(nb_iterations, floor(log(nb_iterations) / log(2))))
+            output_file.write("ellapsed time %s\n"%time.strftime("%H:%M:%S",time.gmtime(t1-t0)))
+        for i in xrange(nb_vectors):
+            m,d = mean_and_std_dev(res[i])
+            s_m += m
+            s_d += d**2
+            if verbose:
+                output_file.write("theta%d           : %f (std. dev. = %f, conf. rad. 0.01 = %f)\n"%(
+                    i,m,d, 2.576*d/sqrt(nb_experiments)))
+            res_final.append(m)
+            std_final.append(2.576*d/sqrt(nb_experiments))
+
+        s_d = sqrt(s_d)
+        s_d_final = 2.576*s_d/sqrt(nb_experiments)
+        if verbose:
+            output_file.write("sum_theta        : %f (std. dev. = %f, conf. rad. 0.01 = %f)\n\n"%(
+                s_m,s_d, 2.576*s_d/sqrt(nb_experiments)))
+        
+        if not closed :
+            output_file.close()
+            print "file closed"
+
+        if return_error:
+            return (res_final, std_final, s_m, s_d_final)
+        else:
+            return res_final
