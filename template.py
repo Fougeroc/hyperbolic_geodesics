@@ -179,7 +179,7 @@ class Experiment(object):
         if self._dimension == 3 :
             v_num = [-(E(alpha[0])**3 - E(alpha[0])**2*(E(beta[1]) + E(beta[2])) + E(alpha[0])*E(beta[1])*E(beta[2]) - (E(alpha[0])**2 - E(alpha[0])*(E(beta[1]) + E(beta[2])) + E(beta[1])*E(beta[2]))*E(beta[0]))/(E(alpha[0])**3 - E(alpha[0])**2*E(alpha[1]) - (E(alpha[0])**2 - E(alpha[0])*E(alpha[1]))*E(alpha[2])), (E(alpha[1])**3 - E(alpha[1])**2*(E(beta[1]) + E(beta[2])) + E(alpha[1])*E(beta[1])*E(beta[2]) - (E(alpha[1])**2 - E(alpha[1])*(E(beta[1]) + E(beta[2])) + E(beta[1])*E(beta[2]))*E(beta[0]))/(E(alpha[0])*E(alpha[1])**2 - E(alpha[1])**3 - (E(alpha[0])*E(alpha[1]) - E(alpha[1])**2)*E(alpha[2])), -((E(alpha[0]) - E(alpha[1]))*E(alpha[2])**3 - (E(alpha[0])*(E(beta[1]) + E(beta[2])) - E(alpha[1])*(E(beta[1]) + E(beta[2])))*E(alpha[2])**2 + (E(alpha[0])*E(beta[1])*E(beta[2]) - E(alpha[1])*E(beta[1])*E(beta[2]))*E(alpha[2]) - ((E(alpha[0]) - E(alpha[1]))*E(alpha[2])**2 + E(alpha[0])*E(beta[1])*E(beta[2]) - E(alpha[1])*E(beta[1])*E(beta[2]) - (E(alpha[0])*(E(beta[1]) + E(beta[2])) - E(alpha[1])*(E(beta[1]) + E(beta[2])))*E(alpha[2]))*E(beta[0]))/((E(alpha[0]) - E(alpha[1]))*E(alpha[2])**3 - (E(alpha[0])**2 - E(alpha[1])**2)*E(alpha[2])**2 + (E(alpha[0])**2*E(alpha[1]) - E(alpha[0])*E(alpha[1])**2)*E(alpha[2]))]
 
-        if self._dimension > 4 :
+        if self._dimension >= 4 :
             from sage.all import solve, n, matrix, column_matrix, det
 
             e_beta_num = [exp(2*1j*pi*beta[k]) for k in xrange(self._dimension)] 
@@ -200,7 +200,6 @@ class Experiment(object):
 
             v_num = [solns[v[k]] for k in xrange(self._dimension)]
         
-            v_num = vector([1]*n)*matrix(n,n, lambda i, j: 1/(alpha[j] - beta[i])).inverse()
             for k in range(self._dimension) :
                 for i in range(self._dimension) :
                     v_num[k] = v_num[k].subs_expr(e_beta[i] == e_beta_num[i])
@@ -208,6 +207,25 @@ class Experiment(object):
 
 
         return e_alpha_num, v_num
+
+    def monodromy_matrices(self, numerical_approx=True):
+        r"""
+        Return monodromy matrices of the hypergeometric equation.
+
+        OUTPUT::
+            -- M0 - Monodromy around 0
+            -- M1 - Monodromy around 1
+            -- MInfty - Monodromy around infinity
+        """
+        from sage.matrix.special import identity_matrix, diagonal_matrix, column_matrix
+        from sage.rings.all import CC
+
+        e_alpha_num, v_num = self.compute_monodromy()
+        M0 = diagonal_matrix(CC,e_alpha_num)
+        M1 = identity_matrix(CC,self._dimension) + column_matrix(CC,v_num)*column_matrix(CC,[1]*self._dimension).transpose()
+        MInfty = (M1*M0).inverse()
+
+        return (M0, M1, MInfty)
 
     def herm_signature(self):
         from sage.all import exp, vector, matrix
