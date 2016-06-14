@@ -38,10 +38,11 @@ t = TorusPlanarSection(2, section_fun, '0,x_r,2r', d_min, d_max/2, d_min, d_max)
 #t.zone().discretized_values(100,100, nb_iterations=10**7, plot=True, plot_2d=True)
 #t.zone().discretized_values(100,100, nb_iterations=10**8, nb_experiments=5, plot=True, plot_2d=True)
 
-
+print Experiment([0,.3],[.5, .7]).monodromy_matrices()
 #t.compute_discretized(100, 100, nb_iterations=10**6)
 #t.compute_discretized(100, 100, nb_iterations=10**8, nb_experiments=5)
 t.compute_discretized(100, 100, nb_iterations=10**5)
+t.test_monodromy(100,100)
 
 zone_0 = (lambda r, x: r>x and 3*r<1+x, 'r>x, 3r<1+x')
 zone_1 = (lambda r, x: r>x and 3*r>1+x, 'r>x, 3r>1+x')

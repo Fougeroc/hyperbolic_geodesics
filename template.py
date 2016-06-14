@@ -180,6 +180,7 @@ class Experiment(object):
             v_num = [-(E(alpha[0])**3 - E(alpha[0])**2*(E(beta[1]) + E(beta[2])) + E(alpha[0])*E(beta[1])*E(beta[2]) - (E(alpha[0])**2 - E(alpha[0])*(E(beta[1]) + E(beta[2])) + E(beta[1])*E(beta[2]))*E(beta[0]))/(E(alpha[0])**3 - E(alpha[0])**2*E(alpha[1]) - (E(alpha[0])**2 - E(alpha[0])*E(alpha[1]))*E(alpha[2])), (E(alpha[1])**3 - E(alpha[1])**2*(E(beta[1]) + E(beta[2])) + E(alpha[1])*E(beta[1])*E(beta[2]) - (E(alpha[1])**2 - E(alpha[1])*(E(beta[1]) + E(beta[2])) + E(beta[1])*E(beta[2]))*E(beta[0]))/(E(alpha[0])*E(alpha[1])**2 - E(alpha[1])**3 - (E(alpha[0])*E(alpha[1]) - E(alpha[1])**2)*E(alpha[2])), -((E(alpha[0]) - E(alpha[1]))*E(alpha[2])**3 - (E(alpha[0])*(E(beta[1]) + E(beta[2])) - E(alpha[1])*(E(beta[1]) + E(beta[2])))*E(alpha[2])**2 + (E(alpha[0])*E(beta[1])*E(beta[2]) - E(alpha[1])*E(beta[1])*E(beta[2]))*E(alpha[2]) - ((E(alpha[0]) - E(alpha[1]))*E(alpha[2])**2 + E(alpha[0])*E(beta[1])*E(beta[2]) - E(alpha[1])*E(beta[1])*E(beta[2]) - (E(alpha[0])*(E(beta[1]) + E(beta[2])) - E(alpha[1])*(E(beta[1]) + E(beta[2])))*E(alpha[2]))*E(beta[0]))/((E(alpha[0]) - E(alpha[1]))*E(alpha[2])**3 - (E(alpha[0])**2 - E(alpha[1])**2)*E(alpha[2])**2 + (E(alpha[0])**2*E(alpha[1]) - E(alpha[0])*E(alpha[1])**2)*E(alpha[2]))]
 
         if self._dimension >= 4 :
+            import sage.all 
             from sage.all import solve, n, matrix, column_matrix, det
 
             e_beta_num = [exp(2*1j*pi*beta[k]) for k in xrange(self._dimension)] 
@@ -217,12 +218,13 @@ class Experiment(object):
             -- M1 - Monodromy around 1
             -- MInfty - Monodromy around infinity
         """
+        import sage.all 
         from sage.matrix.special import identity_matrix, diagonal_matrix, column_matrix
-        from sage.rings.all import CC
+        from sage.rings.complex_double import CDF
 
         e_alpha_num, v_num = self.compute_monodromy()
-        M0 = diagonal_matrix(CC,e_alpha_num)
-        M1 = identity_matrix(CC,self._dimension) + column_matrix(CC,v_num)*column_matrix(CC,[1]*self._dimension).transpose()
+        M0 = diagonal_matrix(CDF,e_alpha_num)
+        M1 = identity_matrix(CDF,self._dimension) + column_matrix(CDF,v_num)*column_matrix(CDF,[1]*self._dimension).transpose()
         MInfty = (M1*M0).inverse()
 
         return (M0, M1, MInfty)
@@ -448,6 +450,68 @@ class TorusPlanarSection(Problem):
 
         return True
 
+    def test_monodromy(self, nsteps_x, nsteps_y, save=False):
+        import os.path, csv
+        from csv import DictReader, DictWriter
+        import sage.all 
+        from sage.matrix.special import identity_matrix
+        from sage.rings.complex_double import CDF
+        from sage.symbolic.constants import e
+
+        x_list = lin_space(self._xmin, self._xmax, nsteps_x)
+        y_list = lin_space(self._ymin, self._ymax, nsteps_y)
+
+        tab = [[self.section_f(x,y) for y in y_list] for x in x_list]
+        fieldnames = ['Exp', 'i', 'j', 'x_plot', 'y_plot', 'dist_id', 'dist_ev']
+
+        f_name = self.f_name(nsteps_x, nsteps_y, -1, -1)
+
+        if os.path.isfile(f_name) :
+            with open(f_name, 'r') as csvfile :
+                reader= csv.DictReader(csvfile, delimiter=',')
+                test = 1
+                for row in reader :
+                    test = 0
+                if test:
+                    last_i, last_j = 0, 0
+                else:
+                    last_i, last_j = int(row['i']), int(row['j'])
+
+        else :
+            with open(f_name, 'w') as csvfile :
+                writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+                writer.writeheader()
+                last_i, last_j = 0, 0
+
+        with open(f_name, 'a') as csvfile :
+            from cmath import exp, pi
+
+            from __builtin__ import set
+            from sage.misc.functional import numerical_approx
+            
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+            if not ((last_i == nsteps_x-1) and (last_i == nsteps_y-1)):
+                for i in range(last_i,nsteps_x):
+                    for j in range(last_j+1 if i == last_i else 0, nsteps_y):
+                        print i,j
+                        M0, M1, MInfty = tab[i][j].monodromy_matrices()
+                        n = tab[i][j]._dimension
+                        beta = tab[i][j]._beta
+                        dist_id = (MInfty*M1*M0 - identity_matrix(CDF,n)).norm()
+                        ev = set(MInfty.eigenvalues())
+                        d = []
+                        for b in beta:
+                            val = exp(-2*1j*pi*b)
+                            c_val = min(ev, key=lambda z: (z-val).norm())
+                            d.append((c_val-val).norm())
+                            ev.remove(c_val)
+                        dist_ev = max(d)
+                        print max(dist_ev, dist_id)
+                        writer.writerow({'Exp' : tab[i][j], 'i' : i, 'j' : j, 
+                                         'x_plot' : tab[i][j].x_plot, 'y_plot' : tab[i][j].y_plot,
+                                         'dist_id' : dist_id, 'dist_ev' : dist_ev})
+
+        return True
 
 
 #    def slope(self, n_zone, nb_tests=5, nb_points, **args): 
@@ -661,7 +725,6 @@ class TorSecZone(TorusPlanarSection):
             anim.save('video/' + f_name[4:] + '_' + self._zone_name + '_anim.mp4', fps=30, extra_args=['-vcodec', 'libx264'])
 
         return res
-
 
 def lyap_exp_CY(C, d, nb_vectors=None, nb_experiments=10, nb_iterations=10**4, verbose=False, output_file=None, return_error=False):
         r"""
