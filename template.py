@@ -161,7 +161,7 @@ class Experiment(object):
         """
         
         from cmath import exp, pi
-
+        
         alpha, beta = self._alpha, self._beta
         e_alpha_num = [exp(2*1j*pi*alpha[k]) for k in xrange(self._dimension)]
 
@@ -182,17 +182,18 @@ class Experiment(object):
         if self._dimension >= 4 :
             import sage.all 
             from sage.all import solve, n, matrix, column_matrix, det
+            import sage.calculus.var as var
 
-            e_beta_num = [exp(2*1j*pi*beta[k]) for k in xrange(self._dimension)] 
-            e_beta_inv_num = [exp(-2*1j*pi*beta[k]) for k in xrange(self._dimension)] 
+            e_beta_num = [E(beta[k]) for k in xrange(self._dimension)] 
+            e_beta_inv_num = [E(-beta[k]) for k in xrange(self._dimension)] 
             
             v = range(self._dimension)
             e_beta = range(self._dimension)
             e_alpha = range(self._dimension)
             for i in xrange(self._dimension):
-                v[i] = var('v' + str(i))
-                e_beta[i] = var('e_beta' + str(i))
-                e_alpha[i] = var('e_alpha' + str(i))
+                v[i] = var.var('v' + str(i))
+                e_beta[i] = var.var('e_beta' + str(i))
+                e_alpha[i] = var.var('e_alpha' + str(i))
 
             M0 = matrix.diagonal(e_alpha)
             M1 = matrix.identity(self._dimension) + column_matrix(v)*matrix([1]*self._dimension)
@@ -203,9 +204,8 @@ class Experiment(object):
         
             for k in range(self._dimension) :
                 for i in range(self._dimension) :
-                    v_num[k] = v_num[k].subs_expr(e_beta[i] == e_beta_num[i])
-                    v_num[k] = v_num[k].subs_expr(e_alpha[i] == e_alpha_num[i])
-
+                    v_num[k] = v_num[k].substitute(e_beta[i] == e_beta_num[i])
+                    v_num[k] = v_num[k].substitute(e_alpha[i] == e_alpha_num[i])
 
         return e_alpha_num, v_num
 
