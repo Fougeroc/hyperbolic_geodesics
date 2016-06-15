@@ -101,7 +101,7 @@ class Experiment(object):
             raise ValueError("the number of iterations must be positive")
 
         #recall that the lyapunov exponents are symmetric
-        if nb_vectors > self._dimension//2 or nb_vectors == None:
+        if nb_vectors == None:
             nb_vectors = self._dimension//2
 
         if max(self.hodge_numbers()) == self._dimension:
@@ -204,8 +204,8 @@ class Experiment(object):
         
             for k in range(self._dimension) :
                 for i in range(self._dimension) :
-                    v_num[k] = v_num[k].substitute(e_beta[i] == e_beta_num[i])
-                    v_num[k] = v_num[k].substitute(e_alpha[i] == e_alpha_num[i])
+                    v_num[k] = v_num[k].subs(e_beta[i] == e_beta_num[i])
+                    v_num[k] = v_num[k].subs(e_alpha[i] == e_alpha_num[i])
 
         return e_alpha_num, v_num
 
@@ -764,7 +764,7 @@ def lyap_exp_CY(C, d, nb_vectors=None, nb_experiments=10, nb_iterations=10**4, v
             raise ValueError("the number of iterations must be positive")
 
         #recall that the lyapunov exponents are symmetric
-        if nb_vectors > 4 or nb_vectors == None:
+        if nb_vectors == None:
             nb_vectors = 4
 
         t0 = time.time()
