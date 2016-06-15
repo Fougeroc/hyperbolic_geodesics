@@ -136,16 +136,16 @@ inline void monodromy_CY(size_t n, size_t nb_vectors, double complex* v_all, dou
   if (n == 0)
     monodromy_ST_inverse(nb_vectors, v_all, C, d);
   if (n == 1)
-    monodromy_S(nb_vectors, v_all, C, d);
-  if (n == 2)
     monodromy_T(nb_vectors, v_all);
+  if (n == 2)
+    monodromy_S(nb_vectors, v_all, C, d);
 }
 
 inline void monodromy_CY_inverse(size_t n, size_t nb_vectors, double complex* v_all, double complex C, double complex d){
   if (n == 0)
     monodromy_ST(nb_vectors, v_all, C, d);
   if (n == 1)
-    monodromy_S_inverse(nb_vectors, v_all, C, d);
-  if (n == 2)
     monodromy_T_inverse(nb_vectors, v_all);
+  if (n == 2)
+    monodromy_S_inverse(nb_vectors, v_all, C, d);
 }
