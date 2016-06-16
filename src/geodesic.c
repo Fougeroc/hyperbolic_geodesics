@@ -122,7 +122,6 @@ void lyap_exp_CY(size_t nb_iteration, size_t nb_vectors, double complex C, doubl
       // if aux is too big, we make it smaller for the code to end.
       if (aux > 100000000) aux = 100000000;
 
-
       if (current_letter < 0) current_letter += 3;
 
       aux -= penalty;
@@ -135,7 +134,6 @@ void lyap_exp_CY(size_t nb_iteration, size_t nb_vectors, double complex C, doubl
 	    if (i % 100 == 1 && test_norm(v_all))
 	      orthogonalize_GS(v_all, theta);
 	  }
-
 	  
 	  current_letter = (current_letter + 1) % 3;
 	}

@@ -161,11 +161,13 @@ class Experiment(object):
         """
         
         from cmath import exp, pi
-        
+        from sage.rings.complex_double import CDF
+        I = CDF.gen()
+
         alpha, beta = self._alpha, self._beta
-        e_alpha_num = [exp(2*1j*pi*alpha[k]) for k in xrange(self._dimension)]
 
         E = lambda x: exp(2*1j*pi*x)
+        e_alpha_num = [E(alpha[k]) for k in xrange(self._dimension)]
 
         if self._dimension == 1 :
             v_num = [-(E(alpha[0]) - E(beta[0]))/E(alpha[0])]
@@ -183,6 +185,9 @@ class Experiment(object):
             import sage.all 
             from sage.all import solve, n, matrix, column_matrix, det
             import sage.calculus.var as var
+            from sage.symbolic.constants import e
+
+            E = lambda x: CDF(e**(2*I*pi*x))
 
             e_beta_num = [E(beta[k]) for k in xrange(self._dimension)] 
             e_beta_inv_num = [E(-beta[k]) for k in xrange(self._dimension)] 
@@ -204,8 +209,8 @@ class Experiment(object):
         
             for k in range(self._dimension) :
                 for i in range(self._dimension) :
-                    v_num[k] = v_num[k].subs(e_beta[i] == e_beta_num[i])
-                    v_num[k] = v_num[k].subs(e_alpha[i] == e_alpha_num[i])
+                    v_num[k] = v_num[k].substitute({e_beta[i]:E(beta[i])})
+                    v_num[k] = v_num[k].substitute({e_alpha[i]:E(alpha[i])})
 
         return e_alpha_num, v_num
 

@@ -67,7 +67,6 @@ inline void monodromy(size_t n, size_t nb_vectors, size_t nb_coordinates, double
     monodromy_one(nb_vectors, nb_coordinates, v_all, w);
 }
 
-
 inline void monodromy_inverse(size_t n, size_t nb_vectors, size_t nb_coordinates, double complex* v_all, double complex *e_alpha, double complex *w){
   if (n == 0)
     monodromy_infinity_inverse(nb_vectors, nb_coordinates, v_all, e_alpha, w);
@@ -134,18 +133,18 @@ inline void monodromy_ST_inverse(size_t nb_vectors, double complex* v_all, doubl
 
 inline void monodromy_CY(size_t n, size_t nb_vectors, double complex* v_all, double complex C, double complex d){
   if (n == 0)
-    monodromy_ST_inverse(nb_vectors, v_all, C, d);
+    monodromy_T(nb_vectors, v_all);                // MInfty
   if (n == 1)
-    monodromy_T(nb_vectors, v_all);
+    monodromy_ST_inverse(nb_vectors, v_all, C, d); // M0
   if (n == 2)
-    monodromy_S(nb_vectors, v_all, C, d);
+    monodromy_S(nb_vectors, v_all, C, d);          // M1
 }
 
 inline void monodromy_CY_inverse(size_t n, size_t nb_vectors, double complex* v_all, double complex C, double complex d){
   if (n == 0)
-    monodromy_ST(nb_vectors, v_all, C, d);
-  if (n == 1)
     monodromy_T_inverse(nb_vectors, v_all);
+  if (n == 1)
+    monodromy_ST(nb_vectors, v_all, C, d);
   if (n == 2)
     monodromy_S_inverse(nb_vectors, v_all, C, d);
 }
