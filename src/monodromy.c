@@ -131,20 +131,31 @@ inline void monodromy_ST_inverse(size_t nb_vectors, double complex* v_all, doubl
   monodromy_T_inverse(nb_vectors, v_all);
 }
 
+inline void monodromy_TS(size_t nb_vectors, double complex* v_all, double complex C, double complex d){
+  monodromy_S(nb_vectors, v_all, C, d);
+  monodromy_T(nb_vectors, v_all);
+}
+
+inline void monodromy_TS_inverse(size_t nb_vectors, double complex* v_all, double complex C, double complex d){
+  monodromy_T_inverse(nb_vectors, v_all);
+  monodromy_S_inverse(nb_vectors, v_all, C, d);
+}
+
+
 inline void monodromy_CY(size_t n, size_t nb_vectors, double complex* v_all, double complex C, double complex d){
   if (n == 0)
-    monodromy_T(nb_vectors, v_all);                // MInfty
+    monodromy_S(nb_vectors, v_all, C, d);                // MInfty
   if (n == 1)
-    monodromy_ST_inverse(nb_vectors, v_all, C, d); // M0
+    monodromy_T(nb_vectors, v_all); // M0
   if (n == 2)
-    monodromy_S(nb_vectors, v_all, C, d);          // M1
+    monodromy_TS_inverse(nb_vectors, v_all, C, d);          // M1
 }
 
 inline void monodromy_CY_inverse(size_t n, size_t nb_vectors, double complex* v_all, double complex C, double complex d){
   if (n == 0)
-    monodromy_T_inverse(nb_vectors, v_all);
-  if (n == 1)
-    monodromy_ST(nb_vectors, v_all, C, d);
-  if (n == 2)
     monodromy_S_inverse(nb_vectors, v_all, C, d);
+  if (n == 1)
+    monodromy_T_inverse(nb_vectors, v_all);
+  if (n == 2)
+    monodromy_TS(nb_vectors, v_all, C, d);
 }
