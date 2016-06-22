@@ -143,19 +143,20 @@ inline void monodromy_TS_inverse(size_t nb_vectors, double complex* v_all, doubl
 
 
 inline void monodromy_CY(size_t n, size_t nb_vectors, double complex* v_all, double complex C, double complex d){
+  //Minf*M0*M1 = Id, M0*M1*Minf = Id, A*B*C = Id 
   if (n == 0)
-    monodromy_S(nb_vectors, v_all, C, d);                // MInfty
+    monodromy_T(nb_vectors, v_all);                         // MInfty
   if (n == 1)
-    monodromy_T(nb_vectors, v_all); // M0
+    monodromy_S(nb_vectors, v_all, C, d);                   // M0
   if (n == 2)
     monodromy_TS_inverse(nb_vectors, v_all, C, d);          // M1
 }
 
 inline void monodromy_CY_inverse(size_t n, size_t nb_vectors, double complex* v_all, double complex C, double complex d){
   if (n == 0)
-    monodromy_S_inverse(nb_vectors, v_all, C, d);
-  if (n == 1)
     monodromy_T_inverse(nb_vectors, v_all);
+  if (n == 1)
+    monodromy_S_inverse(nb_vectors, v_all, C, d);
   if (n == 2)
     monodromy_TS(nb_vectors, v_all, C, d);
 }
