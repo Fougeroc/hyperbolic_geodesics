@@ -15,46 +15,51 @@ inline void monodromy_zero_inverse(size_t nb_vectors, size_t nb_coordinates, dou
 }
 
 
-inline void monodromy_one(size_t nb_vectors, size_t nb_coordinates, double complex* v_all, double complex *w){
+inline void monodromy_one(size_t nb_vectors, size_t nb_coordinates, double complex* v_all, double complex *e_alpha, double complex *w){
+  // We assume here that we took a basis such that Minf is diagonal and M1 = Id + M0^-1*(1,...,1).transpose()*w^t
   size_t i,j;
-  double complex sum;
+  double complex scalar;
 
   for(i=0; i<nb_vectors; ++i){
-    sum = 0;
+    scalar = 0;
     for(j=0; j<nb_coordinates; ++j)
-      sum += v_all[i + nb_vectors * j];
+      scalar += v_all[i + nb_vectors * j]*w[j];
     for(j=0; j<nb_coordinates; ++j)
-      v_all[i + nb_vectors * j] += w[j]*sum;
+      v_all[i + nb_vectors * j] += scalar/e_alpha[j];
   }
 }
 
-inline void monodromy_one_inverse(size_t nb_vectors, size_t nb_coordinates, double complex* v_all, double complex *w){
+inline void monodromy_one_inverse(size_t nb_vectors, size_t nb_coordinates, double complex* v_all, double complex *e_alpha, double complex *w){
+  // We have M1.v = v' = v + <w,v>*(e^-a1,..,e^-an) so <w,v'> = <w,v> + <w,v>*<w,1/alpha> and <w,v> = <w,v'>/(1+<w,1/alpha>)
+  // Hence v = v' - <w,v'>/(1+<w,1/alpha>)*(e^-a1,..,e^-an)
   size_t i,j;
-  double complex sum, sum_w, coeff;
+  double complex scalar, sum_w, coeff;
 
   sum_w = 0;
   for(j=0; j<nb_coordinates; ++j)
-    sum_w += w[j];
-  coeff = 1 / (1 + sum_w);
+    sum_w += w[j]/e_alpha[j];
+  coeff = 1+sum_w;
 
   for(i=0; i<nb_vectors; ++i){
-    sum = 0;
+    scalar = 0;
     for(j=0; j<nb_coordinates; ++j)
-      sum += v_all[i + nb_vectors * j];
+      scalar += v_all[i + nb_vectors * j]*w[j];
     for(j=0; j<nb_coordinates; ++j)
-      v_all[i + nb_vectors * j] -= coeff*w[j]*sum;
+      v_all[i + nb_vectors * j] -= scalar/(coeff*e_alpha[j]);
   }
 }
 
 
 inline void monodromy_infinity(size_t nb_vectors, size_t nb_coordinates, double complex* v_all, double complex *e_alpha, double complex *w){
-  monodromy_one_inverse(nb_vectors, nb_coordinates, v_all, w);
+  // MInfty = (M0*M1)^-1 = M1^-1*M0^-1
   monodromy_zero_inverse(nb_vectors, nb_coordinates, v_all, e_alpha);
+  monodromy_one_inverse(nb_vectors, nb_coordinates, v_all, e_alpha, w);
 }
 
 inline void monodromy_infinity_inverse(size_t nb_vectors, size_t nb_coordinates, double complex* v_all, double complex *e_alpha, double complex *w){
+  // MInfty^-1 = M0*M1
+  monodromy_one(nb_vectors, nb_coordinates, v_all, e_alpha, w);
   monodromy_zero(nb_vectors, nb_coordinates, v_all, e_alpha);
-  monodromy_one(nb_vectors, nb_coordinates, v_all, w);
 }
 
 
@@ -64,7 +69,7 @@ inline void monodromy(size_t n, size_t nb_vectors, size_t nb_coordinates, double
   if (n == 1)
     monodromy_zero(nb_vectors, nb_coordinates, v_all, e_alpha);
   if (n == 2)
-    monodromy_one(nb_vectors, nb_coordinates, v_all, w);
+    monodromy_one(nb_vectors, nb_coordinates, v_all, e_alpha, w);
 }
 
 inline void monodromy_inverse(size_t n, size_t nb_vectors, size_t nb_coordinates, double complex* v_all, double complex *e_alpha, double complex *w){
@@ -73,7 +78,7 @@ inline void monodromy_inverse(size_t n, size_t nb_vectors, size_t nb_coordinates
   if (n == 1)
     monodromy_zero_inverse(nb_vectors, nb_coordinates, v_all, e_alpha);
   if (n == 2)
-    monodromy_one_inverse(nb_vectors, nb_coordinates, v_all, w);
+    monodromy_one_inverse(nb_vectors, nb_coordinates, v_all, e_alpha, w);
 }
 
 

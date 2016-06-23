@@ -20,6 +20,7 @@ class Experiment(object):
     _dimension = None
     _beta = None
     _alpha = None
+    _zero_diagonalizable = True
 
     def __repr__(self):
         return str(self._alpha) + ", " + str(self._beta)
@@ -43,6 +44,7 @@ class Experiment(object):
         q.__hash__ = self.__hash__
         q._beta = copy(self._beta)
         q._alpha = copy(self._alpha)
+        q._zero_diagonalizable = copy(self._zero_diagonalizable)
         q._dimension = self._dimension
 
         return q
@@ -50,7 +52,7 @@ class Experiment(object):
     def __len__(self) :
         return self._dimension
 
-    def __init__(self, alpha, beta, x_plot=None, y_plot=None):
+    def __init__(self, alpha, beta, zero_diagonalizable=True, x_plot=None, y_plot=None):
         if len(alpha) <> len(beta):
             raise ValueError("The two parameter lists must be of the same length")
 
@@ -59,6 +61,7 @@ class Experiment(object):
         self._beta = [beta[k] if 0<=beta[k]<=1 else beta[k] - floor(beta[k]) for k in xrange(self._dimension)]
         self._alpha.sort()
         self._beta.sort()
+        self._zero_diagonalizable = zero_diagonalizable
         self.x_plot = x_plot
         self.y_plot = y_plot
 
@@ -109,10 +112,10 @@ class Experiment(object):
                 output_file.write("by signature of the invariant hermitian form, all lyapunov exponents are 0\n")
             return [0]*nb_vectors, [0]*nb_vectors, 0, 0
 
-        e_alpha, v = self.compute_monodromy()
+        e_alpha, w = self.compute_monodromy()
 
         t0 = time.time()
-        res = lyapunov_exponents.lyapunov_exponents(e_alpha, v, self._dimension, nb_vectors,  nb_experiments, nb_iterations)
+        res = lyapunov_exponents.lyapunov_exponents(e_alpha, w, self._dimension, nb_vectors,  nb_experiments, nb_iterations)
         t1 = time.time()
 
         res_final = []
@@ -155,7 +158,7 @@ class Experiment(object):
         singular points counterclockwise).
 
         We conjugate all the matrices such that the monodromy matrix around zero
-        is diagonal, and the one around 1 is identity + column_matrix(1, .., 1)*v.transpose().
+        is diagonal, and the one around 1 is identity + column_matrix(1, .., 1)*w.transpose().
 
         Then calculus will be easy since we just make scalar product with v and add it in each
         coordinate.
@@ -165,62 +168,33 @@ class Experiment(object):
 
         WARNING ::
 
-            We expect all element of e_alpha to be different.
+            We expect alpha and beta to be disjoint and to have disjoint values.
         """
-        
         from cmath import exp, pi
-        from sage.rings.complex_double import CDF
-        I = CDF.gen()
+        import numpy as np
 
+        n = self._dimension
         alpha, beta = self._alpha, self._beta
+        E = lambda z: exp(2*1j*pi*z)
 
-        E = lambda x: exp(2*1j*pi*x)
+        if not(set([E(beta[j]) for j in range(n)]).isdisjoint(set([E(alpha[j]) for j in range(n)]))):
+            print "Warning sets of eigenvalues not disjoint, flat bundle not minimal, monodromy not defined in this code"
+            print alpha, beta
+            return [0]*n, [0]*n
 
-        if self._dimension == 1 :
-            v_num = [-(E(alpha[0]) - E(beta[0]))/E(alpha[0])]
-
-        if self._dimension == 2 :
-            v_num = [-(E(alpha[0])**2 - (E(alpha[0]) - E(beta[1]))*E(beta[0]) -
-                       E(alpha[0])*E(beta[1]))/(E(alpha[0])**2 - E(alpha[0])*E(alpha[1])),
-                     (E(alpha[1])**2 - (E(alpha[1]) - E(beta[1]))*E(beta[0]) -
-                      E(alpha[1])*E(beta[1]))/(E(alpha[0])*E(alpha[1]) - E(alpha[1])**2)]
-
-        if self._dimension == 3 :
-            v_num = [-(E(alpha[0])**3 - E(alpha[0])**2*(E(beta[1]) + E(beta[2])) + E(alpha[0])*E(beta[1])*E(beta[2]) - (E(alpha[0])**2 - E(alpha[0])*(E(beta[1]) + E(beta[2])) + E(beta[1])*E(beta[2]))*E(beta[0]))/(E(alpha[0])**3 - E(alpha[0])**2*E(alpha[1]) - (E(alpha[0])**2 - E(alpha[0])*E(alpha[1]))*E(alpha[2])), (E(alpha[1])**3 - E(alpha[1])**2*(E(beta[1]) + E(beta[2])) + E(alpha[1])*E(beta[1])*E(beta[2]) - (E(alpha[1])**2 - E(alpha[1])*(E(beta[1]) + E(beta[2])) + E(beta[1])*E(beta[2]))*E(beta[0]))/(E(alpha[0])*E(alpha[1])**2 - E(alpha[1])**3 - (E(alpha[0])*E(alpha[1]) - E(alpha[1])**2)*E(alpha[2])), -((E(alpha[0]) - E(alpha[1]))*E(alpha[2])**3 - (E(alpha[0])*(E(beta[1]) + E(beta[2])) - E(alpha[1])*(E(beta[1]) + E(beta[2])))*E(alpha[2])**2 + (E(alpha[0])*E(beta[1])*E(beta[2]) - E(alpha[1])*E(beta[1])*E(beta[2]))*E(alpha[2]) - ((E(alpha[0]) - E(alpha[1]))*E(alpha[2])**2 + E(alpha[0])*E(beta[1])*E(beta[2]) - E(alpha[1])*E(beta[1])*E(beta[2]) - (E(alpha[0])*(E(beta[1]) + E(beta[2])) - E(alpha[1])*(E(beta[1]) + E(beta[2])))*E(alpha[2]))*E(beta[0]))/((E(alpha[0]) - E(alpha[1]))*E(alpha[2])**3 - (E(alpha[0])**2 - E(alpha[1])**2)*E(alpha[2])**2 + (E(alpha[0])**2*E(alpha[1]) - E(alpha[0])*E(alpha[1])**2)*E(alpha[2]))]
-
-        if self._dimension >= 4 :
-            import sage.all 
-            from sage.all import solve, n, matrix, column_matrix, det
-            import sage.calculus.var as var
-            from sage.symbolic.constants import e
-
-            E = lambda x: CDF(e**(2*I*pi*x))
+        if self._zero_diagonalizable:            
+            N = np.mat([[1/(E(beta[j]) - E(alpha[i])) for j in range(n)] for i in range(n)]) # list of lines : M_(i,j) = M[i][j]
+            w = [(np.mat([1]*n)*N.I)[0,k] for k in range(n)]
             
-            # Introducing some variables to do formal calculus
-            v = range(self._dimension)
-            e_beta = range(self._dimension)
-            e_alpha = range(self._dimension)
+            return [E(a) for a in alpha], w
 
-            for i in xrange(self._dimension):
-                v[i] = var.var('v' + str(i))
-                e_beta[i] = var.var('e_beta' + str(i))
-                e_alpha[i] = var.var('e_alpha' + str(i))
+        else:
+            N = np.mat([[E(-beta[i])/(E(beta[j]) - E(alpha[i])) for j in range(n)] for i in range(n)]) # list of lines : M_(i,j) = M[i][j]
+            w = [(np.mat([1]*n)*N.I)[0,k] for k in range(n)]
+            
+            return [E(-b) for b in beta], w
 
-            M0 = matrix.diagonal(e_alpha)
-            M1 = matrix.identity(self._dimension) + column_matrix(v)*matrix([1]*self._dimension)
-            solns = solve([(M1 * M0 - e_beta_i * matrix.identity(self._dimension)).det() == 0 
-                           for e_beta_i in e_beta], v, solution_dict = True)[0]
-
-            v_num = [solns[v[k]] for k in xrange(self._dimension)]
-        
-            for k in range(self._dimension) :
-                for i in range(self._dimension) :
-                    v_num[k] = v_num[k].substitute({e_beta[i]:E(beta[i])})
-                    v_num[k] = v_num[k].substitute({e_alpha[i]:E(alpha[i])})
-
-        return e_alpha_num, v_num
-
-    def monodromy_matrices(self, numerical_approx=True):
+    def monodromy_matrices(self):
         r"""
         Return monodromy matrices of the hypergeometric equation.
 
@@ -233,10 +207,17 @@ class Experiment(object):
         from sage.matrix.special import identity_matrix, diagonal_matrix, column_matrix
         from sage.rings.complex_double import CDF
 
-        e_alpha_num, v_num = self.compute_monodromy()
-        M0 = diagonal_matrix(CDF,e_alpha_num)
-        M1 = identity_matrix(CDF,self._dimension) + column_matrix(CDF,v_num)*column_matrix(CDF,[1]*self._dimension).transpose()
-        MInfty = (M1*M0).inverse()
+        if self._zero_diagonalizable:
+            e_alpha, w = self.compute_monodromy()
+            M0 = diagonal_matrix(CDF,e_alpha)
+            M1 = identity_matrix(CDF,self._dimension) + M0.inverse()*column_matrix(CDF,[1]*self._dimension)*column_matrix(CDF,w).transpose()
+            MInfty = (M0*M1).inverse()
+
+        else:
+            e_beta, w = self.compute_monodromy()
+            MInfty = diagonal_matrix(CDF, e_beta)
+            M1 = identity_matrix(CDF,self._dimension) + column_matrix(CDF,[1]*self._dimension)*column_matrix(CDF,w).transpose()
+            M0 = (M1*MInfty).inverse()
 
         return (M0, M1, MInfty)
 
