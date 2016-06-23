@@ -155,9 +155,13 @@ class Experiment(object):
         singular points counterclockwise).
 
         We conjugate all the matrices such that the monodromy matrix around zero
-        is diagonal, and the one around 1 is identity + v*(1, .., 1).
+        is diagonal, and the one around 1 is identity + column_matrix(1, .., 1)*v.transpose().
 
+        Then calculus will be easy since we just make scalar product with v and add it in each
+        coordinate.
         Those vector will be used afterward in the C algorithm.
+
+        We have a formula for these vectors (see [KF]).
 
         WARNING ::
 
@@ -171,7 +175,6 @@ class Experiment(object):
         alpha, beta = self._alpha, self._beta
 
         E = lambda x: exp(2*1j*pi*x)
-        e_alpha_num = [E(alpha[k]) for k in xrange(self._dimension)]
 
         if self._dimension == 1 :
             v_num = [-(E(alpha[0]) - E(beta[0]))/E(alpha[0])]
@@ -192,13 +195,12 @@ class Experiment(object):
             from sage.symbolic.constants import e
 
             E = lambda x: CDF(e**(2*I*pi*x))
-
-            e_beta_num = [E(beta[k]) for k in xrange(self._dimension)] 
-            e_beta_inv_num = [E(-beta[k]) for k in xrange(self._dimension)] 
             
+            # Introducing some variables to do formal calculus
             v = range(self._dimension)
             e_beta = range(self._dimension)
             e_alpha = range(self._dimension)
+
             for i in xrange(self._dimension):
                 v[i] = var.var('v' + str(i))
                 e_beta[i] = var.var('e_beta' + str(i))
