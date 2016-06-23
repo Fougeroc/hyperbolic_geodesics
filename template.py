@@ -158,6 +158,10 @@ class Experiment(object):
         is diagonal, and the one around 1 is identity + v*(1, .., 1).
 
         Those vector will be used afterward in the C algorithm.
+
+        WARNING ::
+
+            We expect all element of e_alpha to be different.
         """
         
         from cmath import exp, pi
