@@ -54,7 +54,7 @@ class Experiment(object):
     def __len__(self) :
         return self._dimension
 
-    def __init__(self, alpha, beta, zero_diagonalizable=True, x_plot=None, y_plot=None):
+    def __init__(self, alpha, beta, x_plot=None, y_plot=None):
         if len(alpha) <> len(beta):
             raise ValueError("The two parameter lists must be of the same length")
 
@@ -70,7 +70,6 @@ class Experiment(object):
         self._beta = [beta[k] if 0<=beta[k]<=1 else beta[k] - floor(beta[k]) for k in xrange(self._dimension)]
         self._alpha.sort()
         self._beta.sort()
-        self._zero_diagonalizable = zero_diagonalizable
         self.x_plot = x_plot
         self.y_plot = y_plot
 
@@ -190,17 +189,10 @@ class Experiment(object):
             print alpha, beta
             raise ValueError
 
-        if self._zero_diagonalizable:            
-            N = np.mat([[1/(E(beta[j]) - E(alpha[i])) for j in range(n)] for i in range(n)]) # list of lines : M_(i,j) = M[i][j]
-            w = [(np.mat([1]*n)*N.I)[0,k] for k in range(n)]
+        N = np.mat([[1/(E(beta[j]) - E(alpha[i])) for j in range(n)] for i in range(n)]) # list of lines : M_(i,j) = M[i][j]
+        w = [(np.mat([1]*n)*N.I)[0,k] for k in range(n)]
             
-            return [E(a) for a in alpha], w
-
-        else:
-            N = np.mat([[E(-beta[i])/(E(beta[j]) - E(alpha[i])) for j in range(n)] for i in range(n)]) # list of lines : M_(i,j) = M[i][j]
-            w = [(np.mat([1]*n)*N.I)[0,k] for k in range(n)]
-            
-            return [E(-b) for b in beta], w
+        return [E(a) for a in alpha], w
 
     def monodromy_matrices(self):
         r"""
@@ -215,17 +207,10 @@ class Experiment(object):
         from sage.matrix.special import identity_matrix, diagonal_matrix, column_matrix
         from sage.rings.complex_double import CDF
 
-        if self._zero_diagonalizable:
-            e_alpha, w = self.compute_monodromy()
-            M0 = diagonal_matrix(CDF,e_alpha)
-            M1 = identity_matrix(CDF,self._dimension) + M0.inverse()*column_matrix(CDF,[1]*self._dimension)*column_matrix(CDF,w).transpose()
-            MInfty = (M0*M1).inverse()
-
-        else:
-            e_beta, w = self.compute_monodromy()
-            MInfty = diagonal_matrix(CDF, e_beta)
-            M1 = identity_matrix(CDF,self._dimension) + column_matrix(CDF,[1]*self._dimension)*column_matrix(CDF,w).transpose()
-            M0 = (M1*MInfty).inverse()
+        e_alpha, w = self.compute_monodromy()
+        M0 = diagonal_matrix(CDF,e_alpha)
+        M1 = identity_matrix(CDF,self._dimension) + M0.inverse()*column_matrix(CDF,[1]*self._dimension)*column_matrix(CDF,w).transpose()
+        MInfty = (M0*M1).inverse()
 
         return (M0, M1, MInfty)
 
@@ -599,7 +584,7 @@ class TorSecZone(TorusPlanarSection):
             fig = plt.figure()
             ax = Axes3D(fig)
 
-            aux = [(x,y,z-(x*reg[0] + y*reg[1]) if reg else z,ds) for (x,y,z,ds) in res]
+            aux = [(x,y,z-(x*reg[0] + y*reg[1] + c) if reg else z,ds) for (x,y,z,ds) in res]
 
             for [x, y, z, err] in aux:
                 ax.plot([x, x],[y, y],zs=[z+err, z-err], color='lightsalmon')

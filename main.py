@@ -42,11 +42,17 @@ t = TorusPlanarSection(2, section_fun, '0,x_r,2r', d_min, d_max/2, d_min, d_max)
 #t.zone().discretized_values(100,100, nb_iterations=10**7, plot=True, plot_2d=True)
 #t.zone().discretized_values(100,100, nb_iterations=10**8, nb_experiments=5, plot=True, plot_2d=True)
 
+#print E.x_plot
+#print E.y_plot
+
+#print E._alpha, E._beta
+#print E.hypergeometric_lyap_exp()
+
 #print Experiment([0,.3],[.5, .7]).monodromy_matrices()
-t.compute_discretized(100, 100, nb_iterations=10**6)
+#t.compute_discretized(100, 100, nb_iterations=10**5
 #t.compute_discretized(100, 100, nb_iterations=10**8, nb_experiments=5)
 #t.compute_discretized(100, 100, nb_iterations=10**7)
-t.test_monodromy(100,100)
+#t.test_monodromy(100,100)
 
 # zone_0 = (lambda r, x: r>x and 3*r<1+x, 'r>x, 3r<1+x')
 # zone_1 = (lambda r, x: r>x and 3*r>1+x, 'r>x, 3r>1+x')
@@ -55,15 +61,15 @@ t.test_monodromy(100,100)
 # zone_4 = (lambda r, x: 3*r<x, '3r<x')
 
 # zones = t.zone_list([zone_0, zone_1, zone_2, zone_3, zone_4])
-# reg = [(1.73,-1.74), (-3.47, 0, 1.73), (0,0), (-3.48, 1.74), (1.72, 0)]
+# reg = [(2,-2,0), (-4,0,2), (0,0,0), (-4,2,0), (2,0,0)]
 
-#all = t.zone()
-#p_1 = all.plot_discretized(100,100, nb_iterations=10**5, plot='2d', save=True)
-#p_2 = all.plot_discretized(100,100, nb_iterations=10**7, plot='2d', save=True)
+# all = t.zone()
+# p_1 = all.plot_discretized(100,100, nb_iterations=10**5, plot='2d', save=True)
+# #p_2 = all.plot_discretized(100,100, nb_iterations=10**7, plot='2d', save=True)
 
 
-#i = 0
-#for i in range(5):
+# i = 0
+# for i in range(5):
 #    zones[i].plot_discretized(100,100, nb_iterations=10**5, reg=reg[i], plot='2d', save=True)
 
 # import matplotlib.pyplot as plt
@@ -74,7 +80,7 @@ t.test_monodromy(100,100)
 # X, Y = meshgrid(x_list, y_list)
 # Z = [[0. for _ in y_list] for _ in x_list]
 # for k in range(5):
-#     for (x,y,i,j,z,sd) in zones[k].plot_discretized(100,100, nb_iterations=10**7, reg=reg[k]):
+#     for (x,y,i,j,z,sd) in zones[k].plot_discretized(100,100, nb_iterations=10**5, reg=reg[k]):
 #         Z[i][j] = z
 
 # A = array(Z)
@@ -84,7 +90,7 @@ t.test_monodromy(100,100)
 # plt.xlabel('r')
 # plt.ylabel('x')
 
-# plt.savefig('fig/all_reg_e7.png')
+# plt.savefig('fig/all_reg_e6.png')
 
 
     
@@ -140,32 +146,33 @@ t.test_monodromy(100,100)
 
 #Dimension 3
 
-# n_step = 100
-# d_min = 1./(10*n_step)
-# d_max = 1./2 - d_min
+n_step = 100
+d_min = 1./(10*n_step)
+d_max = 1./2 - d_min
 
-# def section_fun(rel, dist):
-#     return Experiment([0., -dist, -2*dist], [rel, dist + rel, dist + 2*rel], rel, dist)
+def section_fun(rel, dist):
+    return Experiment([0., -dist, -2*dist], [rel, dist + rel, dist + 2*rel], rel, dist)
 
-# zone_0 = (lambda r, x: r>2*x, 'r>2x')
-# zone_1 = (lambda r, x: r<2*x and r>x, 'r<2x,r>x')
-# #zone_2 is alternate, then zero lyapunov exponents
-# zone_2 = (lambda r, x: r<x and 2*r>x, 'alternate')
-# zone_3 = (lambda r, x: 2*r<x and 4*r>x, '2r<x,4r>x')
-# zone_4 = (lambda r, x: 4*r<x, '4r<x')
+zone_0 = (lambda r, x: r>2*x, 'r>2x')
+zone_1 = (lambda r, x: r<2*x and r>x, 'r<2x,r>x')
+#zone_2 is alternate, then zero lyapunov exponents
+zone_2 = (lambda r, x: r<x and 2*r>x, 'alternate')
+zone_3 = (lambda r, x: 2*r<x and 4*r>x, '2r<x,4r>x')
+zone_4 = (lambda r, x: 4*r<x, '4r<x')
 
-# t = TorusPlanarSection(3, section_fun, '0,x,2x_r,x+r,x+2r', d_min, d_max/2, d_min, d_max)
-# #t.zone().discretized_values(100,100, nb_iterations=10**7, reg=reg[i])
-# #t.zone().discretized_values(100,100, nb_iterations=10**7,plot=True, plot_2d=True)
-# zones = t.zone_list([zone_0, zone_1, zone_2, zone_3, zone_4])
-# reg = [(3.94,-4.446), (3.47, -3.5), (0,0), (-3.5, 1.75), (3.5, 0)]
+t = TorusPlanarSection(3, section_fun, '0,x,2x_r,x+r,x+2r', d_min, d_max/2, d_min, d_max)
+t.compute_discretized(100, 100, nb_iterations=10**5)
+#t.zone().discretized_values(100,100, nb_iterations=10**7, reg=reg[i])
+#t.zone().discretized_values(100,100, nb_iterations=10**7,plot=True, plot_2d=True)
+zones = t.zone_list([zone_0, zone_1, zone_2, zone_3, zone_4])
+reg = [(3.94,-4.446), (3.47, -3.5), (0,0), (-3.5, 1.75), (3.5, 0)]
 
-# all = t.zone()
-# all.plot_discretized(100,100,plot=True,nb_iterations=10**7)
+all = t.zone()
+all.plot_discretized(100,100,plot=True,nb_iterations=10**7)
 
-# for i in range(len(zones)):
-#     print zones[i]._zone_name
-#     if i != 2: zones[i].plot_discretized(100,100, plot=True, nb_iterations=10**7, reg=reg[i])
+for i in range(len(zones)):
+    print zones[i]._zone_name
+    if i != 2: zones[i].plot_discretized(100,100, plot=True, nb_iterations=10**7, reg=reg[i])
 
 
 # print str(e).__hash__()
