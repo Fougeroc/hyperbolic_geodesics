@@ -5,6 +5,8 @@ def lin_space(a, b, s):
     delta = (b-a)/(s-1.)
     return [a + delta*k for k in range(s)]
 
+E = lambda z: exp(2*1j*pi*z)
+
 class Experiment(object):
     r"""
     Class of hypergeometric flat bundle on the sphere minus three points.
@@ -55,6 +57,13 @@ class Experiment(object):
     def __init__(self, alpha, beta, zero_diagonalizable=True, x_plot=None, y_plot=None):
         if len(alpha) <> len(beta):
             raise ValueError("The two parameter lists must be of the same length")
+
+        n = len(alpha)
+        if not(set([E(beta[j]) for j in range(n)]).isdisjoint(set([E(alpha[j]) for j in range(n)]))):
+            print "Warning the sets of eigenvalues are not disjoint, the flat bundle won't be minimal, adding a little bit of noise"
+            print alpha, beta
+            alpha = map(lambda x: x + random()/2**15, alpha)
+            beta = map(lambda x: x + random()/2**15, beta)
 
         self._dimension = len(alpha)
         self._alpha = [alpha[k] if 0<=alpha[k]<=1 else alpha[k] - floor(alpha[k]) for k in xrange(self._dimension)]
@@ -175,12 +184,11 @@ class Experiment(object):
 
         n = self._dimension
         alpha, beta = self._alpha, self._beta
-        E = lambda z: exp(2*1j*pi*z)
-
+        
         if not(set([E(beta[j]) for j in range(n)]).isdisjoint(set([E(alpha[j]) for j in range(n)]))):
-            print "Warning sets of eigenvalues not disjoint, flat bundle not minimal, monodromy not defined in this code"
+            print "Warning the sets of eigenvalues are not disjoint, the flat bundle is not minimal"
             print alpha, beta
-            return [0]*n, [0]*n
+            raise ValueError
 
         if self._zero_diagonalizable:            
             N = np.mat([[1/(E(beta[j]) - E(alpha[i])) for j in range(n)] for i in range(n)]) # list of lines : M_(i,j) = M[i][j]
@@ -489,7 +497,7 @@ class TorusPlanarSection(Problem):
                         M0, M1, MInfty = tab[i][j].monodromy_matrices()
                         n = tab[i][j]._dimension
                         beta = tab[i][j]._beta
-                        dist_id = (MInfty*M1*M0 - identity_matrix(CDF,n)).norm()
+                        dist_id = (M0*M1*MInfty - identity_matrix(CDF,n)).norm()
                         ev = set(MInfty.eigenvalues())
                         d = []
                         for b in beta:
