@@ -58,12 +58,18 @@ class Experiment(object):
         if len(alpha) <> len(beta):
             raise ValueError("The two parameter lists must be of the same length")
 
+        frac = lambda x: x if 0<=x<=1 else x - floor(x)
+
+        alpha, beta = map(frac, alpha), map(frac, beta)
+
         n = len(alpha)
-        if not(set([E(beta[j]) for j in range(n)]).isdisjoint(set([E(alpha[j]) for j in range(n)]))):
-            print "Warning the sets of eigenvalues are not disjoint, the flat bundle won't be minimal, adding a little bit of noise"
+        if not(set([E(beta[j]) for j in range(n)]).isdisjoint(set([E(alpha[i]) for i in range(n)]))):
+            print "Warning the sets of eigenvalues are not disjoint, the flat bundle won't be minimal:"
             print alpha, beta
-            alpha = map(lambda x: x + random()/2**15, alpha)
-            beta = map(lambda x: x + random()/2**15, beta)
+            alpha = map(lambda x: frac(x + random()/2**15), alpha)
+            beta = map(lambda x: frac(x + random()/2**15), beta)
+            print "Adding a little bit of noise"
+            print alpha, beta
 
         self._dimension = len(alpha)
         self._alpha = [alpha[k] if 0<=alpha[k]<=1 else alpha[k] - floor(alpha[k]) for k in xrange(self._dimension)]
@@ -184,7 +190,7 @@ class Experiment(object):
         n = self._dimension
         alpha, beta = self._alpha, self._beta
         
-        if not(set([E(beta[j]) for j in range(n)]).isdisjoint(set([E(alpha[j]) for j in range(n)]))):
+        if not(set([E(beta[j]) for j in range(n)]).isdisjoint(set([E(alpha[i]) for i in range(n)]))):
             print "Warning the sets of eigenvalues are not disjoint, the flat bundle is not minimal"
             print alpha, beta
             raise ValueError
@@ -424,7 +430,7 @@ class TorusPlanarSection(Problem):
 
         with open(f_name, 'a') as csvfile :
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-            if not ((last_i == nsteps_x-1) and (last_i == nsteps_y-1)):
+            if not ((last_i == nsteps_x-1) and (last_j == nsteps_y-1)):
                 for i in range(last_i,nsteps_x):
                     for j in range(last_j+1 if i == last_i else 0, nsteps_y):
                         print i,j
