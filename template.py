@@ -54,7 +54,7 @@ class Experiment(object):
     def __len__(self) :
         return self._dimension
 
-    def __init__(self, alpha, beta, x_plot=None, y_plot=None):
+    def __init__(self, alpha, beta, x_plot=None, y_plot=None, verbose=False):
         if len(alpha) <> len(beta):
             raise ValueError("The two parameter lists must be of the same length")
 
@@ -64,12 +64,14 @@ class Experiment(object):
 
         n = len(alpha)
         if not(set([E(beta[j]) for j in range(n)]).isdisjoint(set([E(alpha[i]) for i in range(n)]))):
-            print "Warning the sets of eigenvalues are not disjoint, the flat bundle won't be minimal:"
-            print alpha, beta
+            if verbose:
+                print "Warning the sets of eigenvalues are not disjoint, the flat bundle won't be minimal:"
+                print alpha, beta
             alpha = map(lambda x: frac(x + random()/2**15), alpha)
             beta = map(lambda x: frac(x + random()/2**15), beta)
-            print "Adding a little bit of noise"
-            print alpha, beta
+            if verbose:
+                print "Adding a little bit of noise"
+                print alpha, beta
 
         self._dimension = len(alpha)
         self._alpha = [alpha[k] if 0<=alpha[k]<=1 else alpha[k] - floor(alpha[k]) for k in xrange(self._dimension)]

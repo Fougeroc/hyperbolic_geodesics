@@ -151,28 +151,27 @@ d_min = 1./(10*n_step)
 d_max = 1./2 - d_min
 
 def section_fun(rel, dist):
-    return Experiment([0., -dist, -2*dist], [rel, dist + rel, dist + 2*rel], rel, dist)
+    return Experiment([rel, dist+rel, dist+2*rel], [0., dist, 2*dist], rel, dist)
 
-zone_0 = (lambda r, x: r>2*x, 'r>2x')
-zone_1 = (lambda r, x: r<2*x and r>x, 'r<2x,r>x')
-#zone_2 is alternate, then zero lyapunov exponents
-zone_2 = (lambda r, x: r<x and 2*r>x, 'alternate')
-zone_3 = (lambda r, x: 2*r<x and 4*r>x, '2r<x,4r>x')
-zone_4 = (lambda r, x: 4*r<x, '4r<x')
+# zone_0 = (lambda r, x: r>2*x, 'r>2x')
+# zone_1 = (lambda r, x: r<2*x and r>x, 'r<2x,r>x')
+# #zone_2 is alternate, then zero lyapunov exponents
+# zone_2 = (lambda r, x: r<x and 2*r>x, 'alternate')
+# zone_3 = (lambda r, x: 2*r<x and 4*r>x, '2r<x,4r>x')
+# zone_4 = (lambda r, x: 4*r<x, '4r<x')
 
-t = TorusPlanarSection(3, section_fun, '0,x,2x_r,x+r,x+2r', d_min, d_max/2, d_min, d_max)
+T = TorusPlanarSection(3, section_fun, 'r,d+r,d+2r_0,d,2d', d_min, d_max/2, d_min, d_max)
 t.compute_discretized(100, 100, nb_iterations=10**5)
 #t.zone().discretized_values(100,100, nb_iterations=10**7, reg=reg[i])
 #t.zone().discretized_values(100,100, nb_iterations=10**7,plot=True, plot_2d=True)
 zones = t.zone_list([zone_0, zone_1, zone_2, zone_3, zone_4])
-reg = [(3.94,-4.446), (3.47, -3.5), (0,0), (-3.5, 1.75), (3.5, 0)]
 
 all = t.zone()
-all.plot_discretized(100,100,plot=True,nb_iterations=10**7)
+all.plot_discretized(100,100,nb_iterations=10**5, plot='2d', save=True)
 
-for i in range(len(zones)):
-    print zones[i]._zone_name
-    if i != 2: zones[i].plot_discretized(100,100, plot=True, nb_iterations=10**7, reg=reg[i])
+#for i in range(len(zones)):
+#    print zones[i]._zone_name
+#    if i != 2: zones[i].plot_discretized(100,100, plot=True, nb_iterations=10**7, reg=reg[i])
 
 
 # print str(e).__hash__()
