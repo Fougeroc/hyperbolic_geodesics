@@ -169,25 +169,6 @@ zones = t.zone_list([zone_0, zone_1, zone_2, zone_3, zone_4])
 all = t.zone()
 all.plot_discretized(100,100,nb_iterations=10**5, plot='2d', save=True)
 
-#for i in range(len(zones)):
-#    print zones[i]._zone_name
-#    if i != 2: zones[i].plot_discretized(100,100, plot=True, nb_iterations=10**7, reg=reg[i])
-
-
-# print str(e).__hash__()
-# big_plot(e, 'res/k3_0,x,2x_r,x+r,x+2r')
-# compute_and_plot(e, linspace(d_min,(d_max-d_min)/2,n_step), linspace(d_min,d_max,n_step), f_name='k3_0,x,2x_r,x+r,x+2r', dim_rep=3, rep_type='points')
-
-# plot_show_('res/k3_0,x,2x_r,x+r,x+2r', suffixe='all', mode='show')
-# plot_show_('res/k3_0,x,2x_r,x+r,x+2r', suffixe='all')
-
-# plot_show_('res/k3_0,x,2x_r,x+r,x+2r', zone_1, reg=(3.94,-4.446), suffixe='r>2x_line')
-# plot_show_('res/k3_0,x,2x_r,x+r,x+2r', zone_2, reg=(3.446,-3.452), suffixe='r<2x,r>x_line')
-# #plot_show_('res/k3_0,x,2x_r,x+r,x+2r', zone_3, reg=(0,0), suffixe='r<x,2r>x_line')
-# plot_show_('res/k3_0,x,2x_r,x+r,x+2r', zone_4, reg=(-3.5, 1.75), suffixe='2r<x,3r>x_line')
-# plot_show_('res/k3_0,x,2x_r,x+r,x+2r', zone_5, reg=(3.5, 0), suffixe='4r<x_line')
-
-
 #############################################################################################
 #                                    EXPERIMENT 2                                           #
 #############################################################################################
