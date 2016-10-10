@@ -30,7 +30,7 @@ setup(
     name="lyapunov_exponents",
     version = "0.alpha1",
     author = "C. Fougeron",
-    author_email = "charles.fougeron@ens.fr",
+    author_email = "charles.fougeron@imj-prg.fr",
     description="Computing Lyapunov of K problem",
     long_description=
 """LEKZ: Lyapunov exponents of the Kontzevich-Zorich cocycles
