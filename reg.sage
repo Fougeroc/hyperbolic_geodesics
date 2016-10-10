@@ -30,9 +30,11 @@ def shift(s):
 
 
 reg_tot=[]
-for s in f_range(.0,.2,.1):
-    t = TorusPlanarSection(2, shift(s), '0,x_r,2r+%.1f'%(s), d_min, d_max/2, d_min, d_max)
-    #t.compute_discretized(100, 100, nb_iterations=10**5)
+reg_s = {'a': [[] for _ in range(8)], 'b': [[] for _ in range(8)], 'c': [[] for _ in range(8)]}
+print reg_s['a']
+
+for s in f_range(.5,.9,.02):
+    t = TorusPlanarSection(2, shift(s), '0,x_r,2r+%.2f'%(s), d_min, d_max/2, d_min, d_max)
 
     all = t.zone()
 
@@ -48,23 +50,29 @@ for s in f_range(.0,.2,.1):
 
     zones = t.zone_list(zone)
 
-    reg = []
-	
-    for z in zones:
+    for k in [2,4,5]:
+    	z = zones[k]
         print z.section_name
         print z._zone_name
-        aux = z.plot_discretized(100,100, nb_iterations=10**5, plot=False)
+        aux = z.plot_discretized(100,100, nb_iterations=10**4, plot=False)
 	res = [[float(x),float(y),float(z)] for (x,y,i,j,z,ds) in aux]
 	var('a,b,c')
         model(x,y) = a*x + b*y + c
 	if res:
 	    f = find_fit(res, model, solution_dict=True)
-	    print f
-	    reg.append([f[a],f[b],f[c]])
+	    for x in [a,b,c]:
+	        (reg_s[str(x)][k]).append((f[x],s))
 	else:
 	    print "EMPTY"
-	    reg.append([0,0,0])
 
-    reg_tot.append(reg)
-
-print reg_tot
+var('s')
+model(s) = a*s + c
+for i in range(3):
+    for x in [a,b,c]:
+    	print i, x
+	print reg_s[str(x)][i]
+	if reg_s[str(x)][i]:
+            f = find_fit(reg_s[str(x)][i], model, solution_dict=True)
+	else:
+	    print "EMPTY"
+	print f

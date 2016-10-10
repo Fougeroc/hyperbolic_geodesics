@@ -21,4 +21,10 @@ def shift(s):
 
 for s in np.arange(0,1,.1):
     t = TorusPlanarSection(2, shift(s), '0,x_r,2r+' + str(s), d_min, d_max/2, d_min, d_max)
+    print t.section_name
     t.compute_discretized(100, 100, nb_iterations=10**5)
+
+for s in np.arange(.5,1,.02):
+    t = TorusPlanarSection(2, shift(s), '0,x_r,2r+%.2f'%s, d_min, d_max/2, d_min, d_max)
+    print t.section_name
+    t.compute_discretized(100, 100, nb_iterations=10**4)
