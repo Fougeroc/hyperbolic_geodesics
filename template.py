@@ -126,7 +126,10 @@ class Experiment(object):
         if max(self.hodge_numbers()) == self._dimension:
             if verbose:
                 output_file.write("by signature of the invariant hermitian form, all lyapunov exponents are 0\n")
-            return [0]*nb_vectors, [0]*nb_vectors, 0, 0
+            if return_error:
+                return [0]*nb_vectors, [0]*nb_vectors, 0, 0
+            else:
+                return [0]*nb_vectors
 
         e_alpha, w = self.compute_monodromy()
 
@@ -168,6 +171,22 @@ class Experiment(object):
         else:
             return res_final
 
+    def derivative(self, step=1e-4):
+        le = sum(self.hypergeometric_lyap_exp())
+        res_a, res_b = [], []
+        for i in range(self._dimension):
+            print 'alpha_%i'%(i+1)
+            aux_alpha = copy(self._alpha)
+            aux_alpha[i] += step
+            res_a.append((sum(Experiment(aux_alpha,self._beta).hypergeometric_lyap_exp(verbose=True))-le)/step)
+            print res_a[-1]
+            print 'beta_%i'%(i+1)
+            aux_beta = copy(self._alpha)
+            aux_beta[i] += step
+            res_b.append((sum(Experiment(self._alpha,aux_beta).hypergeometric_lyap_exp(verbose=True))-le)/step)
+            print res_b[-1]
+        return(res_a, res_b)
+        
     def compute_monodromy(self):
         r"""
         Return vectors e_alpha and v, associated to monodromy (When winding around

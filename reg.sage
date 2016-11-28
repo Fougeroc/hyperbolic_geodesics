@@ -39,18 +39,18 @@ for s in f_range(.5,.9,.02):
     all = t.zone()
 
     zone = []
-    zone.append((lambda r, x: r>x and 3*r+s<1+x, 'r>x, 3r+s<1+x'))
+    #zone.append((lambda r, x: r>x and 3*r+s<1+x, 'r>x, 3r+s<1+x'))
     zone.append((lambda r, x: 3*r+s>1+x and 2*r<1-s, '3r+s>1+x, 2r>1-s'))
-    zone.append((lambda r, x: x<2*r+s-1, 'x<2r+s-1'))
-    zone.append((lambda r, x: r>x and 2*r<1-s and x<2*r+s-1, 'r>x, 2r<1-s, x<2r+s-1'))
-    zone.append((lambda r, x: 3*r+s>1+x and x>r, '3r+s>1+x, x>r'))
-    zone.append((lambda r, x: 2*r>1-s and 3*r+s<1+x, '2r>1-s, 3r+s<1+x'))
-    zone.append((lambda r, x: x>2*r+s and 3*r+s>x, 'x>2x+s, 3r+s>x'))
-    zone.append((lambda r, x: 3*r+s<x, '3r+s<x'))
+    #zone.append((lambda r, x: x<2*r+s-1, 'x<2r+s-1'))
+    #zone.append((lambda r, x: r>x and 2*r<1-s and x<2*r+s-1, 'r>x, 2r<1-s, x<2r+s-1'))
+    #zone.append((lambda r, x: 3*r+s>1+x and x>r, '3r+s>1+x, x>r'))
+    #zone.append((lambda r, x: 2*r>1-s and 3*r+s<1+x, '2r>1-s, 3r+s<1+x'))
+    #zone.append((lambda r, x: x>2*r+s and 3*r+s>x, 'x>2x+s, 3r+s>x'))
+    #zone.append((lambda r, x: 3*r+s<x, '3r+s<x'))
 
     zones = t.zone_list(zone)
 
-    for k in [2,4,5]:
+    for k in [0]:
     	z = zones[k]
         print z.section_name
         print z._zone_name
