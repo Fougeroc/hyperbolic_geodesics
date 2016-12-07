@@ -5,6 +5,8 @@ def lin_space(a, b, s):
     delta = (b-a)/(s-1.)
     return [a + delta*k for k in range(s)]
 
+frac = lambda x: x if 0<=x<=1 else x - floor(x)
+
 E = lambda z: exp(2*1j*pi*z)
 
 class Experiment(object):
@@ -58,8 +60,6 @@ class Experiment(object):
         if len(alpha) <> len(beta):
             raise ValueError("The two parameter lists must be of the same length")
 
-        frac = lambda x: x if 0<=x<=1 else x - floor(x)
-
         alpha, beta = map(frac, alpha), map(frac, beta)
 
         n = len(alpha)
@@ -74,10 +74,12 @@ class Experiment(object):
                 print alpha, beta
 
         self._dimension = len(alpha)
-        self._alpha = [alpha[k] if 0<=alpha[k]<=1 else alpha[k] - floor(alpha[k]) for k in xrange(self._dimension)]
-        self._beta = [beta[k] if 0<=beta[k]<=1 else beta[k] - floor(beta[k]) for k in xrange(self._dimension)]
+        self._alpha = map(frac, alpha)
+        self._beta = map(frac, beta)
         self._alpha.sort()
         self._beta.sort()
+        self._i_alpha = [alpha.index(a) for a in self._alpha]
+        self._i_beta = [beta.index(b) for b in self._beta]
         self.x_plot = x_plot
         self.y_plot = y_plot
 
@@ -172,6 +174,7 @@ class Experiment(object):
             return res_final
 
     def derivative(self, step=1e-4):
+        from copy import copy
         le = sum(self.hypergeometric_lyap_exp())
         res_a, res_b = [], []
         for i in range(self._dimension):
@@ -309,9 +312,140 @@ class Experiment(object):
             s = -s
 
         return [haar[k]/2 for k in xrange(2*self._dimension)]
+    def profile(self):
+        r'''
+        RETURN::
+            - p_color - list of organization of the 2d eigenvalues. p_color[k] is True if 
+            the k-th eigenvalue is an alpha False if it is a beta
+            - p_number - defines the characteristic function above those eigenvalues.
+        '''
+        from copy import copy
+        from math import floor
+        #we need to be sure that every value is positive
+        alpha, beta = copy(self._alpha), copy(self._beta)
+        for x in alpha: 
+            if x<0: raise NameError('one value in hodge test is not positive')
+        for x in beta: 
+            if x<0: raise NameError('one value in hodge test is not positive')
+        alpha.append(float('Inf')), beta.append(float('Inf'))
+        alpha.sort(), beta.sort()
+
+        i, j = 0, 0
+        p_color, p_number, p_ev = [0]*2*self._dimension, [0]*2*self._dimension, [0]*2*self._dimension
+        p_index = [0]*2*self._dimension
+        switch = alpha[0]<beta[0]
+
+        while (i < self._dimension) or (j < self._dimension):
+            p_color[i+j] = switch
+            p_ev[i+j] = j if switch else i
+
+            if switch :
+                j += 1
+            else:
+                i += 1
+            switch = beta[i] > alpha[j]
+            p_number[i+j-1] = j-i
 
 
+        s = p_number.index(min(p_number))
+        if p_number[s] == p_number[-1]: return p_color, p_number, p_ev
 
+        self.shift(p_ev[s+1], p_color[s+1])
+        return(self.profile())
+
+    def hodge_profile(self):
+        p_hodge = [0]*2*self._dimension
+        p_color, p_number, p_ev = self.profile()
+        for k in range(2*self._dimension):
+            p_hodge[k] = p_number[k] + (0 if p_color[k] else 1)
+        return p_color, p_hodge, p_ev
+    
+    def plot_line(self):
+        from sage.plot.line import line2d
+        from sage.plot.point import point
+        p = line2d([[0,0],[1,0]])
+        for a in self._alpha:
+            p += point([a,0], color='blue', size=100)
+        for b in self._beta:
+            p += point([b,0], color='red', size=100)
+        p.show(axes=False, xmin=0, xmax=1, ymin=-.1, ymax=.1)
+
+    def plot(self):
+        from sage.functions.trig import sin, cos
+        from sage.plot.circle import circle
+        from sage.plot.point import point
+        from sage.plot.text import text
+        p = circle((0,0),1)
+        for i in range(self._dimension):
+            a = self._alpha[i]
+            p += point([cos(2*pi*a),sin(2*pi*a)], color='blue', size=100)
+            p += text(r"$\alpha_%i$"%(self._i_alpha[i]+1),
+                      [1.2*cos(2*pi*a),1.2*sin(2*pi*a)],fontsize=40)
+        for i in range(self._dimension):
+            b = self._beta[i]
+            p += point([cos(2*pi*b),sin(2*pi*b)], color='red', size=100)
+            p += text(r"$\beta_%i$"%(self._i_beta[i]+1),
+                      [1.2*cos(2*pi*b),1.2*sin(2*pi*b)],fontsize=40)
+        p.show(axes=False, xmin=-1, xmax=1, ymin=-1, ymax=1)
+
+    def plot_profile(self):
+        from sage.plot.line import line2d
+        from sage.plot.point import point
+        from sage.plot.text import text
+        p_color, p_number, p_ev = self.profile()
+        d = len(p_color)
+        color = lambda i: 'blue' if p_color[i] else 'red'
+        p = lambda i: [0,0] if i == -1 else [i+1,p_number[i]]
+        plt = point([0,0],marker='x',size=100)
+        for i in range(d):
+            plt += line2d([p(i-1),p(i)],alpha=.5)
+            plt += point(p(i), color=color(i), size=100)
+            if p_color[i]:
+                [x,y] = p(i)
+                plt += text(r"$\alpha_%i$"%(self._i_alpha[p_ev[i]]+1), [x,y+.2], fontsize = 40)
+            else:
+                [x,y] = p(i)
+                plt += text(r"$\beta_%i$"%(self._i_beta[p_ev[i]]+1), [x,y+.2], fontsize = 40)
+        plt.show(axes=False, ymin=0, xmin=0, xmax=d)
+        
+    def shift(self,i, is_alpha):
+        from copy import copy
+        s = self._alpha[i] if is_alpha else self._beta[i]
+        alpha, beta = [a - s for a in self._alpha], [b-s for b in self._beta]
+        alpha = [alpha[k] if 0<=alpha[k]<=1 else alpha[k] - floor(alpha[k]) for k in xrange(self._dimension)]
+        beta = [beta[k] if 0<=beta[k]<=1 else beta[k] - floor(beta[k]) for k in xrange(self._dimension)]
+        self._alpha, self._beta = copy(alpha), copy(beta)
+        self._alpha.sort(), self._beta.sort()
+        self._i_alpha = [self._i_alpha[alpha.index(a)] for a in self._alpha]
+        self._i_beta = [self._i_beta[beta.index(b)] for b in self._beta]
+
+    def gamma(self):
+        return(sum(self._beta) - sum(self._alpha))
+
+    def degree(self, p, verbose=True, latex=True):
+        p_color, p_hodge, p_ev = self.hodge_profile()
+        i, j, res = 0, 0, 0
+        alpha, beta = [], []
+        for k in range(len(p_hodge)):
+            if p_hodge[k] <= p:
+                if p_color[k]:
+                    alpha.append(r"\alpha_%i"%(self._i_alpha[p_ev[k]]+1))
+                    res += self._alpha[p_ev[k]]
+                else:
+                    beta.append(r"1-\beta_%i"%(self._i_beta[p_ev[k]]+1))
+                    res += 1-self._beta[p_ev[k]]
+                    
+        s = ' + '.join(alpha + beta)
+        if int(self.gamma())+1 <= p:
+            res += frac(self.gamma())
+            s = s + r" + \gamma"
+        expr = "2(" + s + ") = " + str(2*res)
+        if verbose: return expr
+        else: return 2*res
+
+    def weight(self):
+        _, p_hodge, _ = self.hodge_profile()
+        return max(p_hodge)-1
 
 def mean_and_std_dev(l):
     r"""

@@ -76,3 +76,36 @@ for i in range(3):
 	else:
 	    print "EMPTY"
 	print f
+
+#############################################################################################
+#                                    EXPERIMENT 2                                           #
+#############################################################################################
+
+#Dimension 3
+n_step = 100
+d_min = 1./(10*n_step)
+d_max = 1./2 - d_min
+
+def section_fun(rel, dist):
+    return Experiment([rel, dist+rel, dist+2*rel], [0., dist, 2*dist], rel, dist)
+
+t = TorusPlanarSection(3, section_fun, 'r,d+r,d+2r_0,d,2d', d_min, d_max/2, d_min, d_max)
+t.compute_discretized(100, 100, nb_iterations=10**5)
+
+zone = []
+zone.append((lambda r, x: r>2*x, 'r>2*x'))
+zone.append((lambda r, x: r<2*x and x<r, 'r<2x, x<r'))
+zone.append((lambda r, x: x>2*r and x<4*r, 'x>2r, x<4r'))
+zone.append((lambda r, x: x>4*r, 'x>4r'))
+zones = t.zone_list(zone)
+
+for z in zones:
+    print z.section_name
+    print z._zone_name
+    aux = z.plot_discretized(100,100, nb_iterations=10**4, plot=False)
+    res = [[float(x),float(y),float(z)] for (x,y,i,j,z,ds) in aux]
+    var('a,b,c')
+    model(x,y) = a*x + b*y + c
+    if res:
+        f = find_fit(res, model, solution_dict=True)
+	print f
