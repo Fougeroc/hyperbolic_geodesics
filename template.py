@@ -264,54 +264,15 @@ class Experiment(object):
 
 
     def hodge_numbers(self):
-        from copy import copy
-        from math import floor
-        #we need to be sure that every value is positive
-        alpha, beta = copy(self._alpha), copy(self._beta)
-        for x in alpha: 
-            if x<0: raise NameError('one value in hodge test is not positive')
-        for x in beta: 
-            if x<0: raise NameError('one value in hodge test is not positive')
-        alpha.append(float('Inf')), beta.append(float('Inf'))
-        alpha.sort(), beta.sort()
-
-        haar = [0]*2*self._dimension
-        i, j = 0, 0
-        k, switch = (self._dimension, 0) if alpha[0]>beta[0] else (self._dimension-1, 1)
-
-        while (i < self._dimension) or (j < self._dimension):
-        # We are aranging alpha and beta sorted lists. We know beta[0] == 0 is the first to be set.
-        # Then suppose we have set beta[i] if switch == 0 and alpha[j] if switch == 0,
-        # We add some conditions on the limit.
-
-            haar[k] += 1
-
-            if not switch :
-                if beta[i+1] > alpha[j]:
-                    switch = 1
-                    i += 1
-                    # place alpha[j]
-                else:
-                    i += 1
-                    k += 1
-                    # place beta[i]
-            else:
-                if alpha[j+1] > beta[i]:
-                    switch = 0
-                    j += 1
-                    # place beta[i]
-                else:
-                    j += 1
-                    k -= 1
-                    # place alpha[j]
-    
-        s = 1
-        res = 0
-        for x in haar:
-            res += s * x/2
-            s = -s
-
-        return [haar[k]/2 for k in xrange(2*self._dimension)]
+        _, l, _ = self.hodge_profile() 
+        i, h = 1, []
+        aux = l.count(i)/2
+        while aux != 0:
+            h.append(aux)
+            i += 1
+            aux = l.count(i)/2
+        return h
+        
     def profile(self):
         r'''
         RETURN::
