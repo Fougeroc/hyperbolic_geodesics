@@ -92,7 +92,7 @@ void lyap_exp(size_t nb_iteration, size_t nb_vectors, size_t nb_coordinates, dou
 }
 
 
-void lyap_exp_CY(size_t nb_iteration, size_t nb_vectors, double complex C, double complex d, double *theta)
+void lyap_exp_CY(size_t nb_iteration, size_t nb_vectors, double complex a, double complex b, double *theta)
 /*  - nb_iteration : number of iteration of the continued fraction algorithm to simulate geodesics
     - nb_vectors : number of vector we are applying the monodromy matrices to. (also the number of lyapunov exponents we will get)
     - C : parameters for CY familly
@@ -108,9 +108,39 @@ void lyap_exp_CY(size_t nb_iteration, size_t nb_vectors, double complex C, doubl
   size_t nb_coordinates = 4;
   double complex *v_all = malloc(nb_vectors * nb_coordinates * sizeof(double complex));
 
+  set_identity_vectors(v_all);
+  print_vectors(v_all);
+  printf("id\n");
+
+  set_identity_vectors(v_all);
+  monodromy_CY(1, nb_vectors, v_all, a, b);
+  print_vectors(v_all);
+  printf("0\n");
+  set_identity_vectors(v_all);
+  monodromy_CY(2, nb_vectors, v_all, a, b);
+  print_vectors(v_all);
+  printf("1\n");
+  set_identity_vectors(v_all);
+  monodromy_CY(0, nb_vectors, v_all, a, b);
+  print_vectors(v_all);
+  printf("inf\n");
+
+  set_identity_vectors(v_all);
+  monodromy_CY_inverse(1, nb_vectors, v_all, a, b);
+  print_vectors(v_all);
+  printf("0_inv\n");
+  set_identity_vectors(v_all);
+  monodromy_CY_inverse(2, nb_vectors, v_all, a, b);
+  print_vectors(v_all);
+  printf("1_inv\n");
+  set_identity_vectors(v_all);
+  monodromy_CY_inverse(0, nb_vectors, v_all, a, b);
+  print_vectors(v_all);
+  printf("inf_inv\n");
+  
   set_random_vectors(v_all);
   orthogonalize_GS(v_all, theta);
-
+  
   for(i=0; i < nb_vectors; ++i) theta[i] = 0.;
 
   for (it=0; it<nb_iteration; ++it)
@@ -130,7 +160,7 @@ void lyap_exp_CY(size_t nb_iteration, size_t nb_vectors, double complex C, doubl
       if (aux % 2 == 0) {
 	if (it % 2 == 0) {
 	  for (i=0; i<aux/2; ++i) {
-	    monodromy_CY(current_letter, nb_vectors, v_all, C, d);	      
+	    monodromy_CY(current_letter, nb_vectors, v_all, a, b);	      
 	    if (i % 100 == 1 && test_norm(v_all))
 	      orthogonalize_GS(v_all, theta);
 	  }
@@ -140,7 +170,7 @@ void lyap_exp_CY(size_t nb_iteration, size_t nb_vectors, double complex C, doubl
 
 	else {
 	  for (i=0; i<aux/2; ++i) {
-	    monodromy_CY_inverse(current_letter, nb_vectors, v_all, C, d);		      
+	    monodromy_CY_inverse(current_letter, nb_vectors, v_all, a, b);		      
 	    if (i % 100 == 1 && test_norm(v_all))
 	      orthogonalize_GS(v_all, theta);
 	  }
@@ -152,7 +182,7 @@ void lyap_exp_CY(size_t nb_iteration, size_t nb_vectors, double complex C, doubl
       else {
 	if (it % 2 == 0) {
 	  for (i=0; i<(aux+1)/2; ++i) {
-	    monodromy_CY(current_letter, nb_vectors, v_all, C, d);		      
+	    monodromy_CY(current_letter, nb_vectors, v_all, a, b);		      
 	    if (i % 100 == 1 && test_norm(v_all))
 	      orthogonalize_GS(v_all, theta);
 	  }
@@ -162,7 +192,7 @@ void lyap_exp_CY(size_t nb_iteration, size_t nb_vectors, double complex C, doubl
 
 	else {
 	  for (i=0; i<(aux+1)/2; ++i) {
-	    monodromy_CY_inverse(current_letter, nb_vectors, v_all, C, d);		      
+	    monodromy_CY_inverse(current_letter, nb_vectors, v_all, a, b);		      
 	    if (i % 100 == 1 && test_norm(v_all))
 	      orthogonalize_GS(v_all, theta);
 	  }

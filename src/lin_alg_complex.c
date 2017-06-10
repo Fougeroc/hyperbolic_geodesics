@@ -46,6 +46,27 @@ void set_random_vectors(double complex * v_all)
 	orthogonalize_GS(v_all, NULL);
 }
 
+void set_identity_vectors(double complex * v_all)
+/* set random orthogonal frame */
+/* warning: before calling this function call init_GS(dim) */
+{
+	size_t i,j;
+
+	for(i=0; i<nb_vectors; ++i)
+	{
+	  for(j=0; j<nb_coordinates; j++){
+	    if (i == j) {
+	      v_all[i + nb_vectors * j] = 1;
+	    }
+	    else {
+	      v_all[i + nb_vectors * j] = 0;
+	    };
+	  }
+	}
+	//	orthogonalize_GS(v_all, NULL);
+}
+
+
 int init_simulation(size_t nb_v, size_t nb_c)
 /* allocate scal and scal_new in order that it contains nb_vectors elements */
 {

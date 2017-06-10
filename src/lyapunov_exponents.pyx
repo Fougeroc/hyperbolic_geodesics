@@ -51,8 +51,8 @@ def lyapunov_exponents(e_alpha_py, w_py, nb_coordinates, nb_vectors,  nb_experim
     init_simulation(nb_vectors, nb_coordinates); 
     for i in xrange(nb_experiments):
         if CY:
-            [C, d] = CY
-            lyap_exp_CY(nb_iterations, nb_vectors, C, d, theta)
+            [a, b] = CY
+            lyap_exp_CY(nb_iterations, nb_vectors, a, b, theta)
         else:
             lyap_exp(nb_iterations, nb_vectors, nb_coordinates, e_alpha, w, theta)
         for j in xrange(nb_vectors):

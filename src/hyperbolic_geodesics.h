@@ -26,6 +26,7 @@ void free_simulation(void);
 
 void print_vectors(double complex *v_all);
 void set_random_vectors(double complex *v_all);
+void set_identity_vectors(double complex *v_all);
 
 void orthogonalize_GS(double complex *v_all, double *theta);
 void ortho_plus_check(double complex *v_all, double complex *v_buffer, double *theta);
@@ -45,7 +46,7 @@ void monodromy_inverse(size_t n, size_t nb_vectors, size_t nb_coordinates, doubl
 
 void lyap_exp(size_t nb_iteration, size_t nb_vectors, size_t nb_coordinates, double complex *e_alpha, double complex *w, double *theta);
 
-void monodromy_CY(size_t n, size_t nb_vectors, double complex* v_all, double complex C, double complex d);
-void monodromy_CY_inverse(size_t n, size_t nb_vectors, double complex* v_all, double complex C, double complex d);
+void monodromy_CY(size_t n, size_t nb_vectors, double complex* v_all, double complex a, double complex b);
+void monodromy_CY_inverse(size_t n, size_t nb_vectors, double complex* v_all, double complex a, double complex b);
 
-void lyap_exp_CY(size_t nb_iteration, size_t nb_vectors, double complex C, double complex d, double *theta);
+void lyap_exp_CY(size_t nb_iteration, size_t nb_vectors, double complex a, double complex b, double *theta);

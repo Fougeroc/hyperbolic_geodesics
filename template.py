@@ -833,7 +833,7 @@ class TorSecZone(TorusPlanarSection):
 
         return res
 
-def lyap_exp_CY(C, d, nb_vectors=None, nb_experiments=10, nb_iterations=10**4, verbose=False, output_file=None, return_error=False):
+def lyap_exp_CY(a, b, nb_vectors=None, nb_experiments=10, nb_iterations=10**4, verbose=False, output_file=None, return_error=False):
         r"""
         Compute the Lyapunov exponents of the geodesic flow in the hypergeometric function
         space.
@@ -872,10 +872,10 @@ def lyap_exp_CY(C, d, nb_vectors=None, nb_experiments=10, nb_iterations=10**4, v
 
         #recall that the lyapunov exponents are symmetric
         if nb_vectors == None:
-            nb_vectors = 4
+            nb_vectors = 2
 
         t0 = time.time()
-        res = lyapunov_exponents.lyapunov_exponents([0]*4, [0]*4, 4, nb_vectors, nb_experiments, nb_iterations, [C, d])
+        res = lyapunov_exponents.lyapunov_exponents([0]*4, [0]*4, 4, nb_vectors, nb_experiments, nb_iterations, [a, b])
         t1 = time.time()
 
         res_final = []
