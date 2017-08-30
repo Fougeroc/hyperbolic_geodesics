@@ -148,13 +148,13 @@ void monodromy_TS_inverse(size_t nb_vectors, double complex* v_all, double compl
 
 
 void monodromy_CY_K(size_t n, size_t nb_vectors, double complex* v_all, double complex C, double complex d){
-  //Minf*M0*M1 = Id, M0*M1*Minf = Id, A*B*C = Id 
+  //Minf*M0*M1 = Id, M0*M1*Minf = Id, A*B*C = Id
   if (n == 0)
-    monodromy_T(nb_vectors, v_all);                         // MInfty
+    monodromy_T(nb_vectors, v_all);                         // M0
   if (n == 1)
-    monodromy_S(nb_vectors, v_all, C, d);                   // M0
+    monodromy_S(nb_vectors, v_all, C, d);                   // M1
   if (n == 2)
-    monodromy_TS_inverse(nb_vectors, v_all, C, d);          // M1
+    monodromy_TS_inverse(nb_vectors, v_all, C, d);          // Minf
 }
 
 void monodromy_CY_inverse_K(size_t n, size_t nb_vectors, double complex* v_all, double complex C, double complex d){
@@ -167,7 +167,7 @@ void monodromy_CY_inverse_K(size_t n, size_t nb_vectors, double complex* v_all, 
 }
 
 
-void monodromy_CY_zero(size_t nb_vectors, double complex* v_all){
+void monodromy_CY_zero_inv(size_t nb_vectors, double complex* v_all){
   size_t i,j;
   double complex res[4] = {0,0,0,0};
 
@@ -175,7 +175,7 @@ void monodromy_CY_zero(size_t nb_vectors, double complex* v_all){
     res[0] = 0;
     for(j=0; j<3; ++j)
       res[j+1] = v_all[i+nb_vectors*j];
- 
+
     res[0] -= 1*v_all[i+nb_vectors*3];
     res[1] += 4*v_all[i+nb_vectors*3];
     res[2] -= 6*v_all[i+nb_vectors*3];
@@ -186,7 +186,7 @@ void monodromy_CY_zero(size_t nb_vectors, double complex* v_all){
   }
 }
 
-void monodromy_CY_zero_inv(size_t nb_vectors, double complex* v_all){
+void monodromy_CY_zero(size_t nb_vectors, double complex* v_all){
   size_t i,j;
   double complex res[4] = {0,0,0,0};
 
@@ -199,13 +199,13 @@ void monodromy_CY_zero_inv(size_t nb_vectors, double complex* v_all){
     res[1] -= 6*v_all[i];
     res[2] += 4*v_all[i];
     res[3] -= 1*v_all[i];
-    
+
     for(j=0; j<4; ++j)
       v_all[i + nb_vectors*j] = res[j];
   }
 }
 
-void monodromy_CY_inf(size_t nb_vectors, double complex* v_all, double complex a, double complex b){
+void monodromy_CY_inf_inv(size_t nb_vectors, double complex* v_all, double complex a, double complex b){
   size_t i,j;
   double complex res[4] = {0,0,0,0};
 
@@ -218,13 +218,13 @@ void monodromy_CY_inf(size_t nb_vectors, double complex* v_all, double complex a
     res[1] += b*v_all[i];
     res[2] += a*v_all[i];
     res[3] -= 1*v_all[i];
-    
+
     for(j=0; j<4; ++j)
       v_all[i + nb_vectors*j] = res[j];
   }
 }
 
-void monodromy_CY_inf_inv(size_t nb_vectors, double complex* v_all, double complex a, double complex b){
+void monodromy_CY_inf(size_t nb_vectors, double complex* v_all, double complex a, double complex b){
   size_t i,j;
   double complex res[4] = {0,0,0,0};
 
@@ -244,32 +244,32 @@ void monodromy_CY_inf_inv(size_t nb_vectors, double complex* v_all, double compl
 }
 
 void monodromy_CY_one(size_t nb_vectors, double complex* v_all, double complex a, double complex b){
+  monodromy_CY_inf_inv(nb_vectors, v_all, a, b);
   monodromy_CY_zero_inv(nb_vectors, v_all);
-  monodromy_CY_inf_inv(nb_vectors, v_all,a,b);
 }
 
 void monodromy_CY_one_inv(size_t nb_vectors, double complex* v_all, double complex a, double complex b){
-  monodromy_CY_inf(nb_vectors, v_all,a,b);
   monodromy_CY_zero(nb_vectors, v_all);
+  monodromy_CY_inf(nb_vectors, v_all, a, b);
 }
 
 
 void monodromy_CY(size_t n, size_t nb_vectors, double complex* v_all, double complex a, double complex b){
-  //Minf*M0*M1 = Id, M0*M1*Minf = Id, A*B*C = Id 
+  //Minf*M0*M1 = Id, M0*M1*Minf = Id, A*B*C = Id
   if (n == 0)
-    monodromy_CY_inf(nb_vectors, v_all, a, b);             // MInfty
+    monodromy_CY_zero(nb_vectors, v_all);             // M0
   if (n == 1)
-    monodromy_CY_zero(nb_vectors, v_all);                 // M0
+    monodromy_CY_one(nb_vectors, v_all, a, b);             // M1
   if (n == 2)
-    monodromy_CY_one(nb_vectors,v_all, a, b);             // M1
+    monodromy_CY_inf(nb_vectors,v_all, a, b);             // Minf
 }
 
 void monodromy_CY_inverse(size_t n, size_t nb_vectors, double complex* v_all, double complex a, double complex b){
-  //Minf*M0*M1 = Id, M0*M1*Minf = Id, A*B*C = Id 
+  //Minf*M0*M1 = Id, M0*M1*Minf = Id, A*B*C = Id
   if (n == 0)
-    monodromy_CY_inf_inv(nb_vectors, v_all, a, b);            // MInfty
+    monodromy_CY_zero_inv(nb_vectors, v_all);               // M0
   if (n == 1)
-    monodromy_CY_zero_inv(nb_vectors, v_all);                 // M0
+    monodromy_CY_one_inv(nb_vectors, v_all, a, b);          // M1
   if (n == 2)
-    monodromy_CY_one_inv(nb_vectors, v_all, a, b);            // M1
+    monodromy_CY_inf_inv(nb_vectors, v_all, a, b);          // Minf
 }

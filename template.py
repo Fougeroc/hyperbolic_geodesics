@@ -833,7 +833,7 @@ class TorSecZone(TorusPlanarSection):
 
         return res
 
-def lyap_exp_CY(a, b, nb_vectors=None, nb_experiments=10, nb_iterations=10**4, verbose=False, output_file=None, return_error=False):
+def lyap_exp_CY(beta1, beta2, nb_vectors=None, nb_experiments=10, nb_iterations=10**4, verbose=False, output_file=None, return_error=False):
         r"""
         Compute the Lyapunov exponents of the geodesic flow in the hypergeometric function
         space.
@@ -849,8 +849,21 @@ def lyap_exp_CY(a, b, nb_vectors=None, nb_experiments=10, nb_iterations=10**4, v
         - ``output_file`` -- place where we print the results
         
         - ``verbose`` -- do we print the result with an extensive number of information or not
-    
+
+        OUTPUT:
+
+        A list of nb_vectors lyapunov exponents by default.
+
+        If return_error is True, a 4-tuple consisting of :
+
+        1. a list of nb_vectors lyapunov exponents
+        2. a list of nb_vectors of there statistical error
+        3. an integer of their sum
+        4. an integer of the statistical error of their sum
         """
+        from sage.all import exp
+        from sage.misc.functional import numerical_approx
+        
         import time
         import lyapunov_exponents    # the cython bindings
         from math import sqrt
@@ -863,6 +876,13 @@ def lyap_exp_CY(a, b, nb_vectors=None, nb_experiments=10, nb_iterations=10**4, v
             output_file = open(output_file, "w")
             closed = False
 
+        beta1 = numerical_approx(beta1)
+        beta2 = numerical_approx(beta2)
+        b1 = numerical_approx(exp(2*1j*pi*beta1))
+        b2 = numerical_approx(exp(2*1j*pi*beta2))
+        a = (b1**2*b2 + b1*b2**2 + b1 + b2)/(b1*b2)
+        b = (-b1**2*b2**2 - b1**2 - 2*b1*b2 - b2**2 - 1)/(b1*b2)
+        
         if nb_vectors <> None and nb_vectors <= 0:
             raise ValueError("the number of vectors must be positive")
         if nb_experiments <= 0:
