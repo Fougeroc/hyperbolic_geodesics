@@ -1,6 +1,6 @@
 #include "hyperbolic_geodesics.h"
 
-void lyap_exp(size_t nb_iteration, size_t nb_vectors, size_t nb_coordinates, double complex *e_alpha, double complex *w, double *theta)
+void lyap_exp(size_t nb_iteration, size_t nb_vectors, size_t nb_coordinates, double complex *p_zero, double complex *p_infinity, double *theta)
 /*  - nb_iteration : number of iteration of the continued fraction algorithm to simulate geodesics
     - nb_vectors : number of vector we are applying the monodromy matrices to. (also the number of lyapunov exponents we will get)
     - nb_coordinates : size of the monodromy matrices and vectors
@@ -39,7 +39,7 @@ void lyap_exp(size_t nb_iteration, size_t nb_vectors, size_t nb_coordinates, dou
       if (aux % 2 == 0) {
 	if (it % 2 == 0) {
 	  for (i=0; i<aux/2; ++i) {
-	    monodromy(current_letter, nb_vectors, nb_coordinates, v_all, e_alpha, w);
+	    monodromy(current_letter, nb_vectors, nb_coordinates, v_all, p_zero, p_infinity);
 	    if (i % 100 == 1 && test_norm(v_all))
 	      orthogonalize_GS(v_all, theta);
 	  }
@@ -50,7 +50,7 @@ void lyap_exp(size_t nb_iteration, size_t nb_vectors, size_t nb_coordinates, dou
 
 	else {
 	  for (i=0; i<aux/2; ++i) {
-	    monodromy_inverse(current_letter, nb_vectors, nb_coordinates, v_all, e_alpha, w);
+	    monodromy_inverse(current_letter, nb_vectors, nb_coordinates, v_all, p_zero, p_infinity);
 	    if (i % 100 == 1 && test_norm(v_all))
 	      orthogonalize_GS(v_all, theta);
 	  }
@@ -62,7 +62,7 @@ void lyap_exp(size_t nb_iteration, size_t nb_vectors, size_t nb_coordinates, dou
       else {
 	if (it % 2 == 0) {
 	  for (i=0; i<(aux+1)/2; ++i) {
-	    monodromy(current_letter, nb_vectors, nb_coordinates, v_all, e_alpha, w);
+	    monodromy(current_letter, nb_vectors, nb_coordinates, v_all, p_zero, p_infinity);
 	    if (i % 100 == 1 && test_norm(v_all))
 	      orthogonalize_GS(v_all, theta);
 	  }
@@ -72,7 +72,7 @@ void lyap_exp(size_t nb_iteration, size_t nb_vectors, size_t nb_coordinates, dou
 
 	else {
 	  for (i=0; i<(aux+1)/2; ++i) {
-	    monodromy_inverse(current_letter, nb_vectors, nb_coordinates, v_all, e_alpha, w);
+	    monodromy_inverse(current_letter, nb_vectors, nb_coordinates, v_all, p_zero, p_infinity);
 	    if (i % 100 == 1 && test_norm(v_all))
 	      orthogonalize_GS(v_all, theta);
 	  }

@@ -41,8 +41,8 @@ int test_norm(double complex *v_all);
 /* monodromy functions and lyapunov exponents */
 /**********************************************/
 
-void monodromy(size_t n, size_t nb_vectors, size_t nb_coordinates, double complex *v_all, double complex *e_alpha, double complex *w);
-void monodromy_inverse(size_t n, size_t nb_vectors, size_t nb_coordinates, double complex *v_all, double complex *e_alpha, double complex *w);
+void monodromy(size_t n, size_t nb_vectors, size_t nb_coordinates, double complex *v_all, double complex *p_zero, double complex *p_infinity);
+void monodromy_inverse(size_t n, size_t nb_vectors, size_t nb_coordinates, double complex *v_all, double complex *p_zero, double complex *p_infinity);
 
 void lyap_exp(size_t nb_iteration, size_t nb_vectors, size_t nb_coordinates, double complex *e_alpha, double complex *w, double *theta);
 

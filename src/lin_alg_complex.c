@@ -129,7 +129,7 @@ void orthogonalize_GS(double complex *v_all, double *theta)
 	  for(j=0; j<nb_coordinates; ++j)
 	    v_all[j] /= norm;
 	}
-	 
+
 	if (nb_vectors > 1) {
 	  /* put v in the holonomy free subspace */
 	  /* compute <v_0,v_1> in scal_new[0] */
@@ -157,20 +157,20 @@ void orthogonalize_GS(double complex *v_all, double *theta)
 	      if(theta != NULL) theta[i-1] += log(sqnorm);
 	      norm = sqrt(sqnorm);
 	      sqnorm = 0.;
-	      
+
 	      /* c = <v_i,v_(i-1)> / <v_(i-1,v_(i-1)> */
 	      for(j=0; j < nb_coordinates; ++j)
 		{
 		  /* subtract the part of the span of v_0, v_1, ..., v_(i-2) */
 		  for(ii=0; ii<i-1; ++ii)
 		    v_all[i + nb_vectors * j] -= conj(scal[ii]) * v_all[ii + nb_vectors * j];
-		  
+
 		  /* subtract the part of the span of v_(i-1) */
 		  v_all[i + nb_vectors * j] -= conj(c) * v_all[ii + nb_vectors * j];
-		  
+
 		  /* normalize v_(i-1) */
 		  v_all[(i-1) + nb_vectors * j] /= norm;
-		  
+
 		  /* compute scalar products and norms for next loop */
 		  /* sqnorm = <v_i, v_i> */
 		  /* scal_new[ii] = <v_(i+1), v_ii>*/
@@ -187,19 +187,19 @@ void orthogonalize_GS(double complex *v_all, double *theta)
 	  if(theta != NULL) theta[i-1] += log(sqnorm);
 	  norm = sqrt(sqnorm);
 	  sqnorm = .0;
-	  
+
 	  for(j=0; j< nb_coordinates; ++j)
 	    {
 	      for(ii=0; ii<i-1; ++ii)
 		v_all[i + nb_vectors * j] -= conj(scal_new[ii]) * v_all[ii + nb_vectors * j];
-	      
+
 	      v_all[i + nb_vectors * j] -= conj(c) * v_all[i-1 + nb_vectors * j];
-	      
+
 	      v_all[i-1 + nb_vectors * j] /= norm;
-	      
+
 	      sqnorm += creal(v_all[i + nb_vectors * j] * conj(v_all[i + nb_vectors * j]));
 	    }
-	
+
 	  /* we renormalize v_i*/
 	  if(theta != NULL) theta[i] += log(sqnorm);
 	  norm = sqrt(sqnorm);
@@ -221,13 +221,13 @@ void check_orthogonality(double complex *v_all)
 	      s = 0;
 	      for(k=0; k < nb_coordinates; ++k)
 		s += v_all[i1 + nb_vectors*k] * conj(v_all[i2 + nb_vectors*k]);
-	      
+
 	      if (i1==i2 && creal(s - 1) > 0.01){
 		fprintf(stderr, "Wrong normalisation\nNorm : %lf\nDiff : %lf > %lf\n", creal(s), creal(s-1), 1./0x4000);
 		print_vectors(v_all);
 		exit(EXIT_FAILURE);
 	      }
-	      
+
 	      if (i1!=i2 && creal(s) > 0.01) {
 		fprintf(stderr, "Wrong orthogonalisation\nScalar product <v[i%zu], v[i%zu]> : %lf\nnb_vector : %i nb_coordinates : %i\n\n",
 			i1, i2, creal(s), nb_vectors, nb_coordinates);
@@ -264,7 +264,7 @@ inline double max_norm(double complex *v_all)
 	  if (sqnorm > max)
 	    max = sqnorm;
 	}
-	 
+
 	return max;
 }
 
@@ -281,7 +281,7 @@ inline double min_norm(double complex *v_all)
 	  if (sqnorm < min)
 	    min = sqnorm;
 	}
-	 
+
 	return min;
 }
 
@@ -300,7 +300,7 @@ inline int test_norm(double complex *v_all)
 	  if (sqnorm < min)
 	    min = sqnorm;
 	}
-	 
+
 	return ((max > 1024.) || (min < .0001));
 }
 
@@ -314,7 +314,7 @@ void ortho_plus_check(double complex *v_all, double complex *v_buffer, double* t
 	for (i1=0; i1<nb_vectors; ++i1)
 	  for (i2=0; i2<nb_coordinates; ++i2)
 	    v_buffer[i1 + nb_vectors * i2] = v_all[i1 + nb_vectors * i2];
-	
+
 	orthogonalize_GS(v_all, theta);
 
 	for(i1=0; i1<nb_vectors; ++i1)
@@ -323,14 +323,14 @@ void ortho_plus_check(double complex *v_all, double complex *v_buffer, double* t
 	      s = 0;
 	      for(k=0; k < nb_coordinates; ++k)
 		s += v_all[i1 + nb_vectors*k] * conj(v_all[i2 + nb_vectors*k]);
-	      
+
 	      if (i1==i2 && creal(s - 1) > 0.01){
 		fprintf(stderr, "Wrong normalisation\nNorm : %lf\nDiff : %lf > %lf\n", creal(s), creal(s-1), 1./0x4000);
 		print_vectors(v_buffer);
 		print_vectors(v_all);
 		exit(EXIT_FAILURE);
 	      }
-	      
+
 	      if (i1!=i2 && creal(s) > 0.01) {
 		fprintf(stderr, "Wrong orthogonalisation\nScalar product <v[i%zu], v[i%zu]> : %lf\nnb_vector : %i nb_coordinates : %i\n\n",
 			i1, i2, creal(s), nb_vectors, nb_coordinates);

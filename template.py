@@ -17,9 +17,9 @@ class Experiment(object):
 
     - ``_dimension`` -- dimension of the flat bundle
 
-    - ``_alpha`` -- roots of the denominator polynom - also eigenvalues of monodromy around 0
+    - ``_alpha`` -- roots of the denominator polynom - also argument of eigenvalues of monodromy around 0
 
-    - ``_beta`` -- roots of the numerator polynom - also minus eigenvalues of monodromy around infinity
+    - ``_beta`` -- roots of the numerator polynom - also minus argument of eigenvalues of monodromy around infinity
     """
     _dimension = None
     _beta = None
@@ -88,24 +88,26 @@ class Experiment(object):
         r"""
         Compute the Lyapunov exponents of the geodesic flow in the hypergeometric function
         space.
-        
+
         INPUT:
 
         - ``nb_vectors`` -- the number of vectors to use
-        
+
         - ``nb_experiments`` -- number of experimets
-        
+
         - ``nb_iterations`` -- the number of iterations of the induction to perform
-        
+
         - ``output_file`` -- place where we print the results
-        
+
         - ``verbose`` -- do we print the result with an extensive number of information or not
-    
+
         """
         import time
         import lyapunov_exponents    # the cython bindings
         from math import sqrt
-        
+        from cmath import exp, pi
+        from numpy.polynomial import Polynomial
+
         if output_file is None:
             from sys import stdout
             output_file = stdout
@@ -133,10 +135,16 @@ class Experiment(object):
             else:
                 return [0]*nb_vectors
 
-        e_alpha, w = self.compute_monodromy()
+        n = self._dimension
+        alpha, beta = self._alpha, self._beta
+
+        p_zero, p_infinity = Polynomial(1+0*1j), Polynomial(1+0*1j)
+        for i in range(n):
+            p_zero *= Polynomial([-E(-alpha[i]),1])
+            p_infinity *= Polynomial([-E(-beta[i]),1])
 
         t0 = time.time()
-        res = lyapunov_exponents.lyapunov_exponents(e_alpha, w, self._dimension, nb_vectors,  nb_experiments, nb_iterations)
+        res = lyapunov_exponents.lyapunov_exponents(p_zero.coef, p_infinity.coef, self._dimension, nb_vectors,  nb_experiments, nb_iterations)
         t1 = time.time()
 
         res_final = []
@@ -163,7 +171,7 @@ class Experiment(object):
         if verbose:
             output_file.write("sum_theta        : %f (std. dev. = %f, conf. rad. 0.01 = %f)\n\n"%(
                 s_m,s_d, 2.576*s_d/sqrt(nb_experiments)))
-        
+
         if not closed :
             output_file.close()
             print "file closed"
@@ -189,40 +197,23 @@ class Experiment(object):
             res_b.append((sum(Experiment(self._alpha,aux_beta).hypergeometric_lyap_exp(verbose=True))-le)/step)
             print res_b[-1]
         return(res_a, res_b)
-        
-    def compute_monodromy(self):
+
+    def characteristic_polynomials(self):
         r"""
-        Return vectors e_alpha and v, associated to monodromy (When winding around
-        singular points counterclockwise).
-
-        We conjugate all the matrices such that the monodromy matrix around zero
-        is diagonal, and the one around 1 is identity + column_matrix(1, .., 1)*w.transpose().
-
-        Then calculus will be easy since we just make scalar product with v and add it in each
-        coordinate.
-        Those vector will be used afterward in the C algorithm.
-
-        We have a formula for these vectors (see [KF]).
-
-        WARNING ::
-
-            We expect alpha and beta to be disjoint and to have disjoint values.
+        Return characteristic polynomial of the monodromy matrix around 0 (inverse) and infinity.
         """
         from cmath import exp, pi
-        import numpy as np
+        from numpy.polynomial import Polynomial
 
         n = self._dimension
         alpha, beta = self._alpha, self._beta
-        
-        if not(set([E(beta[j]) for j in range(n)]).isdisjoint(set([E(alpha[i]) for i in range(n)]))):
-            print "Warning the sets of eigenvalues are not disjoint, the flat bundle is not minimal"
-            print alpha, beta
-            raise ValueError
 
-        N = np.mat([[1/(E(beta[j]) - E(alpha[i])) for j in range(n)] for i in range(n)]) # list of lines : M_(i,j) = M[i][j]
-        w = [(np.mat([1]*n)*N.I)[0,k] for k in range(n)]
-            
-        return [E(a) for a in alpha], w
+        p_zero, p_infinity = Polynomial(1+0*1j), Polynomial(1+0*1j)
+        for i in range(n):
+            p_zero *= Polynomial([-exp(-alpha[i]*2*1j*pi),1])
+            p_infinity *= Polynomial([-exp(-beta[i]*2*1j*pi),1])
+
+        return p_zero.coef, p_infinity.coef
 
     def monodromy_matrices(self):
         r"""
@@ -233,14 +224,12 @@ class Experiment(object):
             -- M1 - Monodromy around 1
             -- MInfty - Monodromy around infinity
         """
-        import sage.all 
-        from sage.matrix.special import identity_matrix, diagonal_matrix, column_matrix
-        from sage.rings.complex_double import CDF
+        from sage.matrix.special import companion_matrix
+        p_zero, p_infinity = self.characteristic_polynomials()
 
-        e_alpha, w = self.compute_monodromy()
-        M0 = diagonal_matrix(CDF,e_alpha)
-        M1 = identity_matrix(CDF,self._dimension) + M0.inverse()*column_matrix(CDF,[1]*self._dimension)*column_matrix(CDF,w).transpose()
-        MInfty = (M0*M1).inverse()
+        M0 = companion_matrix(p_zero).inverse()
+        MInfty = companion_matrix(p_infinity)
+        M1 = M0.inverse()*MInfty.inverse()
 
         return (M0, M1, MInfty)
 
@@ -255,16 +244,16 @@ class Experiment(object):
         v = vector([1]*n)*matrix(n,n, lambda i, j: 1/(alpha_exp[j] + beta_exp[i])).inverse()
         d_val = [1/(-beta_exp[i]/v[i]).real_part() for i in xrange(self._dimension)]
         d_val.sort()
-    
+
         k = 0
         while (k < n) and (d_val[k] < 0):
             k += 1
-        
+
         return(k, n-k)
 
 
     def hodge_numbers(self):
-        _, l, _ = self.hodge_profile() 
+        _, l, _ = self.hodge_profile()
         i, h = 1, []
         aux = l.count(i)/2
         while aux != 0:
@@ -272,11 +261,11 @@ class Experiment(object):
             i += 1
             aux = l.count(i)/2
         return h
-        
+
     def profile(self):
         r'''
         RETURN::
-            - p_color - list of organization of the 2d eigenvalues. p_color[k] is True if 
+            - p_color - list of organization of the 2d eigenvalues. p_color[k] is True if
             the k-th eigenvalue is an alpha False if it is a beta
             - p_number - defines the characteristic function above those eigenvalues.
         '''
@@ -284,9 +273,9 @@ class Experiment(object):
         from math import floor
         #we need to be sure that every value is positive
         alpha, beta = copy(self._alpha), copy(self._beta)
-        for x in alpha: 
+        for x in alpha:
             if x<0: raise NameError('one value in hodge test is not positive')
-        for x in beta: 
+        for x in beta:
             if x<0: raise NameError('one value in hodge test is not positive')
         alpha.append(float('Inf')), beta.append(float('Inf'))
         alpha.sort(), beta.sort()
@@ -320,7 +309,7 @@ class Experiment(object):
         for k in range(2*self._dimension):
             p_hodge[k] = p_number[k] + (0 if p_color[k] else 1)
         return p_color, p_hodge, p_ev
-    
+
     def plot_line(self):
         from sage.plot.line import line2d
         from sage.plot.point import point
@@ -368,7 +357,7 @@ class Experiment(object):
                 [x,y] = p(i)
                 plt += text(r"$\beta_%i$"%(self._i_beta[p_ev[i]]+1), [x,y+.2], fontsize = 40)
         plt.show(axes=False, ymin=0, xmin=0, xmax=d)
-        
+
     def shift(self,i, is_alpha):
         from copy import copy
         s = self._alpha[i] if is_alpha else self._beta[i]
@@ -395,7 +384,7 @@ class Experiment(object):
                 else:
                     beta.append(r"1-\beta_%i"%(self._i_beta[p_ev[k]]+1))
                     res += 1-self._beta[p_ev[k]]
-                    
+
         s = ' + '.join(alpha + beta)
         if int(self.gamma())+1 <= p:
             res += frac(self.gamma())
@@ -434,7 +423,7 @@ def mean_and_std_dev(l):
 class Problem(object):
     r"""
     Has attributes :
-    
+
     - ``dim``
 
 
@@ -449,14 +438,14 @@ class TorusPlanarSection(Problem):
     - ``_zones`` -- list of (test for a zone, name for it)
 
     - ``dim`` -- dimention of the studied flat bundle
- 
+
     - ``section_f`` -- function that take two real parameter and map to the section of the torus
 
-    - ``_xmin`` -- Boundary of the studied domain 
+    - ``_xmin`` -- Boundary of the studied domain
 
     - ``_xmax`` -- Boudary of the studied domain
 
-    - ``_ymin`` -- Boundary of the studied domain 
+    - ``_ymin`` -- Boundary of the studied domain
 
     - ``_ymax`` -- Boudary of the studied domain
     """
@@ -499,7 +488,7 @@ class TorusPlanarSection(Problem):
 
     def f_name(self, nsteps_x, nsteps_y, nb_iterations, nb_experiments):
         res = 'res/k' + str(self.dim) + '_' + self.section_name
-        res += '_(%0.1e<%0.1e:%s),(%0.1e<%0.1e:%s)'%(float(self._xmin),float(self._xmax),nsteps_x,float(self._ymin),float(self._ymax),nsteps_y) 
+        res += '_(%0.1e<%0.1e:%s),(%0.1e<%0.1e:%s)'%(float(self._xmin),float(self._xmax),nsteps_x,float(self._ymin),float(self._ymax),nsteps_y)
         res += '_it%0.1e_exp%s'%(nb_iterations, nb_experiments)
         return(res)
 
@@ -508,7 +497,7 @@ class TorusPlanarSection(Problem):
         Compute discretized values of the given torus section.
 
         INPUT::
-            - nsteps_x -- 
+            - nsteps_x --
             - nsteps_y --
             - nb_iterations --
             - nb_experiments --
@@ -551,7 +540,7 @@ class TorusPlanarSection(Problem):
                     for j in range(last_j+1 if i == last_i else 0, nsteps_y):
                         print i,j
                         r, d, s_r, s_d = tab[i][j].hypergeometric_lyap_exp(verbose = False, nb_iterations=nb_iterations, nb_experiments=nb_experiments,return_error=True)
-                        writer.writerow({'Exp' : tab[i][j], 'i' : i, 'j' : j, 
+                        writer.writerow({'Exp' : tab[i][j], 'i' : i, 'j' : j,
                                          'x_plot' : tab[i][j].x_plot, 'y_plot' : tab[i][j].y_plot,
                                          'res' : r, 'std' : d, 'sum' : s_r, 'sum_std' : s_d})
 
@@ -560,7 +549,7 @@ class TorusPlanarSection(Problem):
     def test_monodromy(self, nsteps_x, nsteps_y, save=False):
         import os.path, csv
         from csv import DictReader, DictWriter
-        import sage.all 
+        import sage.all
         from sage.matrix.special import identity_matrix
         from sage.rings.complex_double import CDF
         from sage.symbolic.constants import e
@@ -595,7 +584,7 @@ class TorusPlanarSection(Problem):
 
             from __builtin__ import set
             from sage.misc.functional import numerical_approx
-            
+
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             if not ((last_i == nsteps_x-1) and (last_i == nsteps_y-1)):
                 for i in range(last_i,nsteps_x):
@@ -614,14 +603,14 @@ class TorusPlanarSection(Problem):
                             ev.remove(c_val)
                         dist_ev = max(d)
                         print max(dist_ev, dist_id)
-                        writer.writerow({'Exp' : tab[i][j], 'i' : i, 'j' : j, 
+                        writer.writerow({'Exp' : tab[i][j], 'i' : i, 'j' : j,
                                          'x_plot' : tab[i][j].x_plot, 'y_plot' : tab[i][j].y_plot,
                                          'dist_id' : dist_id, 'dist_ev' : dist_ev})
 
         return True
 
 
-#    def slope(self, n_zone, nb_tests=5, nb_points, **args): 
+#    def slope(self, n_zone, nb_tests=5, nb_points, **args):
 
 
 class TorSecZone(TorusPlanarSection):
@@ -660,7 +649,7 @@ class TorSecZone(TorusPlanarSection):
         raise NameError('Test Zone too small, cannot find random values')
 
     def random_points(self, nb_points=5, nb_iterations=10**4, nb_experiments=10, plot=False, reg=None):
-        from os import path 
+        from os import path
         from csv import DictReader, DictWriter
         print self._zone_name
         f_name = 'res/random_d' + str(self.dim) + '_' + self._zone_name + '_' + str(nb_iterations) + '_' +str(nb_experiments)
@@ -689,7 +678,7 @@ class TorSecZone(TorusPlanarSection):
                 print i
                 exp = self.rand()
                 r, d, s_r, s_d = exp.hypergeometric_lyap_exp(verbose = False, nb_iterations=nb_iterations, nb_experiments=nb_experiments)
-                
+
                 writer.writerow({'Exp' : exp, 'i' : i+1,
                                  'x_plot' : exp.x_plot, 'y_plot' : exp.y_plot,
                                  'res' : r, 'std' : d, 'sum' : s_r, 'sum_std' : s_d})
@@ -797,7 +786,7 @@ class TorSecZone(TorusPlanarSection):
             if save: plt.savefig('fig/' + f_name[4:] + '.png')
             else: plt.show()
 
-        if plot == '2d':            
+        if plot == '2d':
             x_list = lin_space(self._xmin, self._xmax, nsteps_x)
             y_list = lin_space(self._ymin, self._ymax, nsteps_y)
             X, Y = meshgrid(x_list, y_list)
@@ -837,17 +826,26 @@ def lyap_exp_CY(beta1, beta2, nb_vectors=None, nb_experiments=10, nb_iterations=
         r"""
         Compute the Lyapunov exponents of the geodesic flow in the hypergeometric function
         space.
-        
+
+        The input parameters yield the eigenvalues around infinity,
+        $e^{2i\pi\beta_1}, e^{2i\pi\beta_2}, e^{-2i\pi\beta_1}, e^{-2i\pi\beta_1}$.
+        We compute the coefficient of the characteristic polynomial of such a matrix.
+        And call the C function which associate to these coefficient the companion matrices
+        of the polynomial. We use Levelt theorem for computing monodromy matrices.
+        See Theorem 3.2.3 in [Beu].
+
         INPUT:
 
+        - ``beta1``, ``beta2`` -- parameters of the eigenvalues
+
         - ``nb_vectors`` -- the number of vectors to use
-        
+
         - ``nb_experiments`` -- number of experimets
-        
+
         - ``nb_iterations`` -- the number of iterations of the induction to perform
-        
+
         - ``output_file`` -- place where we print the results
-        
+
         - ``verbose`` -- do we print the result with an extensive number of information or not
 
         OUTPUT:
@@ -857,17 +855,17 @@ def lyap_exp_CY(beta1, beta2, nb_vectors=None, nb_experiments=10, nb_iterations=
         If return_error is True, a 4-tuple consisting of :
 
         1. a list of nb_vectors lyapunov exponents
-        2. a list of nb_vectors of there statistical error
+        2. a list of nb_vectors of their statistical error
         3. an integer of their sum
         4. an integer of the statistical error of their sum
         """
         from sage.all import exp
         from sage.misc.functional import numerical_approx
-        
+
         import time
         import lyapunov_exponents    # the cython bindings
         from math import sqrt
-        
+
         if output_file is None:
             from sys import stdout
             output_file = stdout
@@ -882,7 +880,7 @@ def lyap_exp_CY(beta1, beta2, nb_vectors=None, nb_experiments=10, nb_iterations=
         b2 = numerical_approx(exp(2*1j*pi*beta2))
         a = (b1**2*b2 + b1*b2**2 + b1 + b2)/(b1*b2)
         b = (-b1**2*b2**2 - b1**2 - 2*b1*b2 - b2**2 - 1)/(b1*b2)
-        
+
         if nb_vectors <> None and nb_vectors <= 0:
             raise ValueError("the number of vectors must be positive")
         if nb_experiments <= 0:
@@ -922,7 +920,7 @@ def lyap_exp_CY(beta1, beta2, nb_vectors=None, nb_experiments=10, nb_iterations=
         if verbose:
             output_file.write("sum_theta        : %f (std. dev. = %f, conf. rad. 0.01 = %f)\n\n"%(
                 s_m,s_d, 2.576*s_d/sqrt(nb_experiments)))
-        
+
         if not closed :
             output_file.close()
             print "file closed"
